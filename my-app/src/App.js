@@ -1107,8 +1107,8 @@ export default function App() {
           .subcat-img { width: 40px !important; height: 40px !important; }
           .contact-wrap { flex-direction: column !important; }
         }
-        @media (max-width: 520px) {
-          .prod-card { min-width: 0 !important; }
+        @media (max-width: 900px) {
+          .prod-card { min-width: 155px !important; max-width: 155px !important; }
         }
       `}</style>
 
@@ -1329,7 +1329,7 @@ export default function App() {
         <>
 
           {/* Sidebar + category grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "246px 1fr", background: "#fff", position: "relative" }}>
+          <div className="home-grid" style={{ display: "grid", gridTemplateColumns: "246px 1fr", background: "#fff", position: "relative" }}>
             {/* Dark sidebar */}
             <div className="sidebar-col" style={{ background: "#1a1a1a", padding: "1.25rem 0.875rem", overflowY: "auto", overflowX: "hidden", height: 480, minWidth: 0 }}>
               <div style={{ fontSize: 10, color: "#E65C00", fontWeight: 700, letterSpacing: 1.5, marginBottom: "0.875rem", paddingLeft: 4 }}>BROWSE PRODUCTS</div>
