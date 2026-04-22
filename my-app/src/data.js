@@ -2,7 +2,7 @@ export const BASE = "https://mgp.ge/timthumb/thumb.php?src=/upload/";
 export const SZ = "&w=280&h=210&zc=1&q=100";
 export const SZ_LG = "&w=600&h=500&zc=1&q=100";
 
-const HOEGERT_NAME = "HOEGERT";
+export const HOEGERT_NAME = "HOEGERT";
 export const OLD_HOGERT_CATS = ["HOGERT სახარჯი მასალები", "HOGERT GERMAN ხელსაწყოები"];
 
 export const defaultCategories = [
@@ -129,6 +129,20 @@ export function getSEOSettings() {
 }
 export function saveSEOSettings(s) { localStorage.setItem('mgp_seo', JSON.stringify(s)); }
 
+export function getSocialLinks() {
+  try { return JSON.parse(localStorage.getItem('mgp_socials') || '{}'); } catch { return {}; }
+}
+export function saveSocialLinks(s) { localStorage.setItem('mgp_socials', JSON.stringify(s)); }
+
+export function getHomepageSliders() {
+  try {
+    const stored = localStorage.getItem('mgp_homepage_sliders');
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return defaultCategories.slice(0, 6).map(c => c.name);
+}
+export function saveHomepageSliders(list) { localStorage.setItem('mgp_homepage_sliders', JSON.stringify(list)); }
+
 export function getHeaderBanners() {
   try { return JSON.parse(localStorage.getItem('mgp_hbanners') || '[]'); } catch { return []; }
 }
@@ -140,6 +154,13 @@ export function getSliderConfig() {
 export function saveSliderConfig(c) {
   if (!c || !c.length) localStorage.removeItem('mgp_slider');
   else localStorage.setItem('mgp_slider', JSON.stringify(c));
+}
+export function getSliderDisabled() {
+  return localStorage.getItem('mgp_slider_disabled') === '1';
+}
+export function setSliderDisabled(val) {
+  if (val) localStorage.setItem('mgp_slider_disabled', '1');
+  else localStorage.removeItem('mgp_slider_disabled');
 }
 
 export function getCustomCategories() {

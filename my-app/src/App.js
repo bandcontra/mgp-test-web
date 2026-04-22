@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import AdminPanel from "./AdminPanel";
-import { defaultCategories as categories, getStoredProducts, getSEOSettings, getHeaderBanners, getSliderConfig, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed } from "./data";
+import { defaultCategories as categories, HOEGERT_NAME, SZ, SZ_LG, getStoredProducts, getSEOSettings, getHeaderBanners, getSliderConfig, getSliderDisabled, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed, getHomepageSliders, getSocialLinks } from "./data";
 import mgpLogo from "./mgp-favicon_3.png";
 
-const HOEGERT_CAT = "HOEGERT";
+const HOEGERT_CAT = HOEGERT_NAME;
 
 // Returns first available image src for a product (uploaded base64 or legacy URL)
 function getProductImg(p) {
@@ -88,9 +88,6 @@ const translations = {
     orderDate: "Дата", orderTotal: "Сумма", orderItems: "Позиции",
   },
 };
-
-const SZ = "&w=280&h=210&zc=1&q=100";
-const SZ_LG = "&w=600&h=500&zc=1&q=100";
 
 // For product page large view: base64 images are already full-res; URL images get upscaled via timthumb
 function getLargeImg(src) {
@@ -183,7 +180,7 @@ function CategorySlider({ cat, allProducts, t, onAdd, onSeeAll, onView, lang, ca
       <div style={{ height: 4, background: `linear-gradient(90deg, ${accent} 0%, ${accent}88 100%)`, flexShrink: 0 }} />
       {/* Header row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.25rem 0.75rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+        <div onClick={() => onSeeAll(cat.name)} style={{ display: "flex", alignItems: "center", gap: 11, cursor: "pointer" }}>
           <div style={{ width: 42, height: 42, borderRadius: 10, background: cat.bg || "#f5f5f5", border: `1.5px solid ${accent}33`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
             {cat.icon
               ? cat.icon
@@ -224,8 +221,6 @@ function PromoSlider({ t, lang, onShop, onView, products, sliderConfig }) {
         return products.find(p => p.id === parseInt(id));
       })
       .filter(Boolean);
-  } else {
-    slides = products.filter(p => p.disc && p.price > 10 && getProductImg(p)).slice(0, 5);
   }
 
   useEffect(() => {
@@ -308,8 +303,8 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
   return (
     <div style={{ display: "flex", minHeight: "70vh" }}>
       {/* Left category sidebar */}
-      <div className="sidebar-col product-sidebar" style={{ width: 220, flexShrink: 0, background: "#1a1a1a", padding: "1.25rem 0.875rem", overflowY: "auto", alignSelf: "stretch" }}>
-        <div style={{ fontSize: 10, color: "#E65C00", fontWeight: 700, letterSpacing: 1.5, marginBottom: "0.875rem", paddingLeft: 4 }}>BROWSE</div>
+      <div className="sidebar-col product-sidebar" style={{ width: 225, flexShrink: 0, background: "#1a1a1a", padding: "0.75rem 0.625rem", overflowY: "auto", alignSelf: "stretch", border: "2px solid #E65C00", borderRadius: 10, boxShadow: "0 0 18px rgba(230,92,0,0.35)" }}>
+        <div style={{ fontSize: 12, color: "#fff", fontWeight: 800, letterSpacing: 2, marginBottom: "0.75rem", padding: "7px 10px", background: "#E65C00", borderRadius: 6, textAlign: "center", textTransform: "uppercase", boxShadow: "0 2px 8px rgba(230,92,0,0.5)" }}>BROWSE PRODUCTS</div>
         {allCatsForSidebar.map(cat => {
           const catSubs = (subcategories || []).filter(s => s.parentName === cat.name);
           const catLabel2 = lang === "en" ? cat.en : lang === "ru" ? (cat.ru || cat.en) : cat.name;
@@ -317,14 +312,14 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
           return (
             <div key={cat.name}>
               <div onClick={() => onGoCategory && onGoCategory(cat.name)}
-                style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 7, cursor: "pointer", marginBottom: 1,
-                  background: isActive ? "rgba(230,92,0,0.22)" : "transparent", borderLeft: isActive ? "2px solid #E65C00" : "2px solid transparent" }}>
+                style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 10px", borderRadius: 6, cursor: "pointer", marginBottom: 5,
+                  background: isActive ? "rgba(230,92,0,0.25)" : "rgba(255,255,255,0.04)", border: isActive ? "1px solid rgba(230,92,0,0.5)" : "1px solid transparent" }}>
                 {cat.icon && <span style={{ fontSize: 14, flexShrink: 0 }}>{cat.icon}</span>}
                 {!cat.icon && cat.name === HOEGERT_CAT && (
-                  <img src="/hoger.png" alt="HOEGERT" style={{ height: 14, objectFit: "contain", flexShrink: 0, filter: "brightness(0) invert(1)", opacity: 0.7 }} />
+                  <img src="/hoger.png" alt="HOEGERT" style={{ height: 13, objectFit: "contain", flexShrink: 0, filter: "brightness(0) invert(1)", opacity: 0.7 }} />
                 )}
-                <span style={{ fontSize: 11, color: isActive ? "#fff" : "#ccc", fontWeight: isActive ? 600 : 400, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{catLabel2}</span>
-                {catSubs.length > 0 && <span style={{ color: "#555", fontSize: 10 }}>›</span>}
+                <span style={{ fontSize: 12.5, color: isActive ? "#fff" : "#ddd", fontWeight: isActive ? 600 : 400, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{catLabel2}</span>
+                {catSubs.length > 0 && <span style={{ color: "#E65C00", fontSize: 12 }}>›</span>}
               </div>
             </div>
           );
@@ -911,6 +906,7 @@ export default function App() {
   const [notification, setNotification] = useState("");
   const [products, setProducts] = useState(getStoredProducts);
   const [sliderConfig, setSliderConfig] = useState(() => getSliderConfig());
+  const [sliderDisabled, setSliderDisabled] = useState(() => getSliderDisabled());
   const [headerBanners, setHeaderBanners] = useState(() => getHeaderBanners());
   const [customCategories, setCustomCategories] = useState(() => getCustomCategories());
   const [subcategories, setSubcategories] = useState(() => getSubcategories());
@@ -928,6 +924,8 @@ export default function App() {
   const [wishlist, setWishlist] = useState(() => { const u = getCurrentCustomer(); return u ? getWishlist(u.id) : []; });
   const [recentlyViewed, setRecentlyViewed] = useState(() => getRecentlyViewed());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [homepageSliders, setHomepageSliders] = useState(() => getHomepageSliders());
+  const [socialLinks, setSocialLinks] = useState(() => getSocialLinks());
 
   const allCategories = [
     ...categories
@@ -990,11 +988,14 @@ export default function App() {
   // Refresh admin-controlled config when leaving admin page
   const refreshAdminConfig = () => {
     setSliderConfig(getSliderConfig());
+    setSliderDisabled(getSliderDisabled());
     setHeaderBanners(getHeaderBanners());
     setCustomCategories(getCustomCategories());
     setSubcategories(getSubcategories());
     setBrandLogos(getBrandLogos());
     setCatOverrides(getCategoryOverrides());
+    setHomepageSliders(getHomepageSliders());
+    setSocialLinks(getSocialLinks());
   };
 
   const addToCart = (product, qty = 1) => {
@@ -1066,7 +1067,7 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", minHeight: "100vh", background: "#F4F4F4", overflowX: "hidden" }}>
-      <AnnouncementBar banners={headerBanners} />
+      {page !== "admin" && <AnnouncementBar banners={headerBanners} />}
       <style>{`
         .prod-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.10); }
         .prod-card { transition: transform 0.18s, box-shadow 0.18s; }
@@ -1209,6 +1210,16 @@ export default function App() {
                 style={{ background: lang === l ? "#E65C00" : "rgba(255,255,255,0.1)", border: "none", color: "#fff", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", fontWeight: lang === l ? 700 : 400 }}>{l.toUpperCase()}</button>
             ))}
           </div>
+          {(socialLinks.facebook || socialLinks.instagram || socialLinks.whatsapp) && (
+            <div style={{ marginTop: "1.5rem" }}>
+              <div style={{ fontSize: 11, color: "#E65C00", fontWeight: 700, letterSpacing: 1.5, marginBottom: 10 }}>FOLLOW US</div>
+              <div style={{ display: "flex", gap: 10 }}>
+                {socialLinks.facebook && <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" style={{ width: 38, height: 38, borderRadius: 8, background: "#1877F2", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>}
+                {socialLinks.instagram && <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" style={{ width: 38, height: 38, borderRadius: 8, background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>}
+                {socialLinks.whatsapp && <a href={`https://wa.me/${socialLinks.whatsapp.replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer" style={{ width: 38, height: 38, borderRadius: 8, background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>}
+              </div>
+            </div>
+          )}
           <div style={{ marginTop: "auto", paddingTop: "1.5rem" }}>
             {currentUser ? (
               <div onClick={() => { setPage("profile"); setMobileMenuOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px", background: "rgba(255,255,255,0.08)", borderRadius: 10, cursor: "pointer" }}>
@@ -1224,7 +1235,7 @@ export default function App() {
         </div>
       )}
 
-      <nav className="nav-root" style={{ background: "#E65C00", padding: "0 2rem", display: "flex", alignItems: "center", height: 62, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 12px rgba(0,0,0,0.18)", gap: 16 }}>
+      {page !== "admin" && <nav className="nav-root" style={{ background: "#E65C00", padding: "0 2rem", display: "flex", alignItems: "center", height: 62, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 12px rgba(0,0,0,0.18)", gap: 16 }}>
         {/* Hamburger — mobile only */}
         <button className="mobile-hamburger" onClick={() => setMobileMenuOpen(true)}
           style={{ background: "rgba(255,255,255,0.12)", border: "none", color: "#fff", width: 38, height: 38, borderRadius: 9, cursor: "pointer", flexShrink: 0, flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, padding: 0 }}>
@@ -1262,6 +1273,28 @@ export default function App() {
           </button>
         </form>
 
+        {/* Social icons — desktop only */}
+        <div className="nav-lang" style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {socialLinks.facebook && (
+            <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"
+              style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+          )}
+          {socialLinks.instagram && (
+            <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"
+              style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+          )}
+          {socialLinks.whatsapp && (
+            <a href={`https://wa.me/${socialLinks.whatsapp.replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer"
+              style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </a>
+          )}
+        </div>
+
         <div style={{ display: "flex", gap: 7, alignItems: "center", flexShrink: 0, marginLeft: "auto" }}>
           <div className="nav-lang" style={{ display: "flex", gap: 6 }}>
             {["ka", "en", "ru"].map(l => (
@@ -1294,7 +1327,7 @@ export default function App() {
             {cartCount > 0 && <span style={{ background: "#E65C00", color: "#fff", borderRadius: "50%", width: 20, height: 20, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>{cartCount}</span>}
           </button>
         </div>
-      </nav>
+      </nav>}
 
       {/* Live search dropdown */}
       {searchOpen && search.trim().length >= 1 && (() => {
@@ -1343,8 +1376,8 @@ export default function App() {
           {/* Sidebar + category grid */}
           <div className="home-grid" style={{ display: "grid", gridTemplateColumns: "246px 1fr", background: "#fff", position: "relative" }}>
             {/* Dark sidebar */}
-            <div className="sidebar-col" style={{ background: "#1a1a1a", padding: "1.25rem 0.875rem", overflowY: "auto", overflowX: "hidden", height: 480, minWidth: 0 }}>
-              <div style={{ fontSize: 10, color: "#E65C00", fontWeight: 700, letterSpacing: 1.5, marginBottom: "0.875rem", paddingLeft: 4 }}>BROWSE PRODUCTS</div>
+            <div className="sidebar-col" style={{ background: "#1a1a1a", padding: "0.75rem 0.625rem", overflowY: "auto", overflowX: "hidden", height: 480, minWidth: 0, border: "2px solid #E65C00", borderRadius: 10, boxShadow: "0 0 18px rgba(230,92,0,0.35)" }}>
+              <div style={{ fontSize: 12, color: "#fff", fontWeight: 800, letterSpacing: 2, marginBottom: "0.75rem", padding: "7px 10px", background: "#E65C00", borderRadius: 6, textAlign: "center", textTransform: "uppercase", boxShadow: "0 2px 8px rgba(230,92,0,0.5)", flexShrink: 0 }}>BROWSE PRODUCTS</div>
               {allCategories.map(cat => {
                 const catSubcats = subcategories.filter(s => s.parentName === cat.name);
                 const catLabel = lang === "en" ? cat.en : lang === "ru" ? (cat.ru || cat.en) : cat.name;
@@ -1361,12 +1394,12 @@ export default function App() {
                     }}
                     onMouseLeave={() => { flyTimer.current = setTimeout(() => setHoveredCat(null), 160); }}>
                     <div onClick={() => goSeeAll(cat.name)}
-                      style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 7, cursor: "pointer", marginBottom: 1, background: isHovered ? "rgba(230,92,0,0.18)" : "transparent", transition: "background 0.15s" }}>
+                      style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 10px", borderRadius: 6, cursor: "pointer", marginBottom: 5, background: isHovered ? "rgba(230,92,0,0.25)" : "rgba(255,255,255,0.04)", border: isHovered ? "1px solid rgba(230,92,0,0.5)" : "1px solid transparent", transition: "all 0.15s" }}>
                       {cat.icon
-                        ? <span style={{ fontSize: 15, flexShrink: 0 }}>{cat.icon}</span>
+                        ? <span style={{ fontSize: 14, flexShrink: 0 }}>{cat.icon}</span>
                         : <img src="/hoger.png" alt="" style={{ height: 13, objectFit: "contain", flexShrink: 0, filter: "brightness(0) invert(0.6)", opacity: 0.8 }} />}
-                      <span style={{ fontSize: 11, color: "#ccc", fontWeight: 400, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{catLabel}</span>
-                      {catSubcats.length > 0 && <span style={{ color: "#555", fontSize: 10, flexShrink: 0 }}>›</span>}
+                      <span style={{ fontSize: 12.5, color: isHovered ? "#fff" : "#ddd", fontWeight: isHovered ? 600 : 400, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{catLabel}</span>
+                      {catSubcats.length > 0 && <span style={{ color: "#E65C00", fontSize: 12, flexShrink: 0 }}>›</span>}
                     </div>
                   </div>
                 );
@@ -1375,7 +1408,7 @@ export default function App() {
 
             {/* Slider in the right column, next to the sidebar */}
             <div style={{ minWidth: 0, overflow: "hidden", height: "100%" }}>
-              <PromoSlider t={t} lang={lang} onShop={() => setPage("catalog")} onView={goToProduct} products={products} sliderConfig={sliderConfig} />
+              {!sliderDisabled && <PromoSlider t={t} lang={lang} onShop={() => setPage("catalog")} onView={goToProduct} products={products} sliderConfig={sliderConfig} />}
             </div>
 
           </div>
@@ -1411,36 +1444,39 @@ export default function App() {
             );
           })()}
 
-          {/* Large image category cards — m2m.ge style */}
-          <div style={{ padding: "1.25rem 1.5rem", background: "#f4f4f4", overflowX: "hidden" }}>
-            <div style={{ fontSize: 10, color: "#888", fontWeight: 700, letterSpacing: 1.5, marginBottom: "1rem" }}>{t.featured.toUpperCase()}</div>
-            <div className="cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
-              {allCategories.map(cat => {
-                const catLabel = lang === "en" ? cat.en : lang === "ru" ? (cat.ru || cat.en) : cat.name;
-                return (
-                  <div key={cat.name} onClick={() => goSeeAll(cat.name)}
-                    className="cat-card cat-grid-item"
-                    style={{
-                      position: "relative", borderRadius: 12, overflow: "hidden", cursor: "pointer", height: 166,
-                      background: cat.bg || "#2a2a2a",
-                      border: `2px solid ${cat.color || "#ddd"}33`,
-                      boxShadow: `0 4px 0 ${cat.color || "#ccc"}55, 0 6px 18px rgba(0,0,0,0.14)`,
-                      transform: "translateY(0)",
-                      transition: "transform 0.18s, box-shadow 0.18s",
-                    }}>
-                    {cat.img
-                      ? <img src={cat.img} alt={cat.en} loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.35s" }} className="cat-card-img" onError={e => { e.target.style.display = "none"; }} />
-                      : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, background: cat.bg || "#f0f0f0" }}>{cat.icon || "📦"}</div>}
-                    {/* Top-left accent stripe */}
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: cat.color || "#E65C00", opacity: 0.85 }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)" }} />
-                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px 13px 14px" }}>
-                      {cat.icon && <div style={{ fontSize: 14, marginBottom: 3 }}>{cat.icon}</div>}
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1.25, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{catLabel}</div>
+          {/* Large image category cards */}
+          <div style={{ padding: "1.5rem", overflowX: "hidden" }}>
+            <div style={{ background: "#fff", borderRadius: 18, border: "2px solid #e8e8e8", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", padding: "1.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "1.25rem" }}>
+                <div style={{ width: 4, height: 24, background: "#E65C00", borderRadius: 4, flexShrink: 0 }} />
+                <div style={{ fontSize: 18, fontWeight: 800, color: "#1a1a1a", letterSpacing: 0.2 }}>{t.featured}</div>
+              </div>
+              <div className="cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(145px, 1fr))", gap: 12 }}>
+                {allCategories.map(cat => {
+                  const catLabel = lang === "en" ? cat.en : lang === "ru" ? (cat.ru || cat.en) : cat.name;
+                  return (
+                    <div key={cat.name} onClick={() => goSeeAll(cat.name)}
+                      className="cat-card cat-grid-item"
+                      style={{
+                        position: "relative", borderRadius: 14, overflow: "hidden", cursor: "pointer", height: 145,
+                        background: cat.bg || "#2a2a2a",
+                        border: `2px solid ${cat.color || "#ddd"}44`,
+                        boxShadow: `0 4px 0 ${cat.color || "#ccc"}55, 0 6px 18px rgba(0,0,0,0.14)`,
+                        transition: "transform 0.18s, box-shadow 0.18s",
+                      }}>
+                      {cat.img
+                        ? <img src={cat.img} alt={cat.en} loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.35s" }} className="cat-card-img" onError={e => { e.target.style.display = "none"; }} />
+                        : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, background: cat.bg || "#f0f0f0" }}>{cat.icon || "📦"}</div>}
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: cat.color || "#E65C00", opacity: 0.9 }} />
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)" }} />
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 15px 16px" }}>
+                        {cat.icon && <div style={{ fontSize: 12, marginBottom: 3 }}>{cat.icon}</div>}
+                        <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", lineHeight: 1.25, textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}>{catLabel}</div>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
           <BrandsSlider logos={brandLogos} />
@@ -1468,7 +1504,7 @@ export default function App() {
                 </div>
               );
             })()}
-            {allCategories.map(cat => (
+            {allCategories.filter(cat => homepageSliders.includes(cat.name)).map(cat => (
               <CategorySlider key={cat.name} cat={cat} allProducts={products} t={t} onAdd={addToCart} onSeeAll={goSeeAll} onView={goToProduct} lang={lang} cats={allCategories} wishlist={wishlist} onToggleWishlist={toggleWishlist} />
             ))}
           </div>
@@ -1589,7 +1625,7 @@ export default function App() {
             <div style={{ background: "#fff", border: "1.5px solid #e8e8e8", borderRadius: 16, padding: "2rem", flex: "1 1 300px", minWidth: 280, maxWidth: 440 }}>
               <p style={{ color: "#666", fontSize: 14, marginBottom: "1.5rem", lineHeight: 1.65 }}>{t.contactInfo}</p>
               {[
-                { icon: "📍", content: <span style={{ color: "#1a1a1a" }}>{t.address}</span> },
+                { icon: "📍", content: <a href="https://maps.google.com/?q=Rafael+Agladze+St+15+Megaline+Tbilisi" target="_blank" rel="noopener noreferrer" style={{ color: "#E65C00", textDecoration: "none" }}>{t.address}</a> },
                 { icon: "📞", content: <div><div>{t.phone}</div><div style={{ marginTop: 4 }}>+995 599 05 95 71</div></div> },
                 { icon: "✉️", content: t.email },
               ].map((r, i) => (
@@ -1603,6 +1639,36 @@ export default function App() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 {lang === "ka" ? "გახსენი Google Maps-ში" : lang === "ru" ? "Открыть в Google Maps" : "Open in Google Maps"}
               </a>
+              {(socialLinks.facebook || socialLinks.instagram || socialLinks.whatsapp) && (
+                <div style={{ marginTop: "1.5rem", paddingTop: "1.25rem", borderTop: "1.5px solid #f0f0f0" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#888", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    {lang === "ka" ? "სოციალური მედია" : lang === "ru" ? "Соцсети" : "Social Media"}
+                  </div>
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    {socialLinks.facebook && (
+                      <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#1877F2", color: "#fff", borderRadius: 9, padding: "9px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                        Facebook
+                      </a>
+                    )}
+                    {socialLinks.instagram && (
+                      <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", color: "#fff", borderRadius: 9, padding: "9px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                        Instagram
+                      </a>
+                    )}
+                    {socialLinks.whatsapp && (
+                      <a href={`https://wa.me/${socialLinks.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#25D366", color: "#fff", borderRadius: 9, padding: "9px 16px", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                        WhatsApp
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             {/* Right: embedded Google Map */}
             <div style={{ flex: "1 1 340px", minWidth: 300, borderRadius: 16, overflow: "hidden", border: "1.5px solid #e8e8e8", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", minHeight: 340 }}>
@@ -1639,7 +1705,7 @@ export default function App() {
         <AdminPanel products={products} setProducts={setProducts} onConfigChange={refreshAdminConfig} />
       )}
 
-      <a href="tel:+995322200000" style={{ position: "fixed", bottom: 28, right: 24, background: "#E65C00", color: "#fff", borderRadius: "50%", width: 58, height: 58, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300, textDecoration: "none", boxShadow: "0 4px 16px rgba(230,92,0,0.45)" }}>
+      <a href="tel:+9953222654344" style={{ position: "fixed", bottom: 28, right: 24, background: "#E65C00", color: "#fff", borderRadius: "50%", width: 58, height: 58, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300, textDecoration: "none", boxShadow: "0 4px 16px rgba(230,92,0,0.45)" }}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.35 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l1.62-1.62a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
       </a>
 
@@ -1664,7 +1730,7 @@ export default function App() {
           <div style={{ height: 1, background: "#222", marginBottom: "1.25rem" }} />
           <div className="footer-bottom" style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, fontSize: 12 }}>
             <div>© 2025 Master Group (MGP) · All rights reserved</div>
-            <div>📍 {t.address} · 📞 {t.phone} · ✉️ {t.email}</div>
+            <div>📍 <a href="https://maps.google.com/?q=Rafael+Agladze+St+15+Megaline+Tbilisi" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{t.address}</a> · 📞 {t.phone} · ✉️ {t.email}</div>
           </div>
         </div>
       </div>

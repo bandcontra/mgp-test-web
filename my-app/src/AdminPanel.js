@@ -3,7 +3,7 @@ import {
   saveProducts, logActivity, getActivity, defaultCategories,
   getSEOSettings, saveSEOSettings,
   getHeaderBanners, saveHeaderBanners,
-  getSliderConfig, saveSliderConfig,
+  getSliderConfig, saveSliderConfig, getSliderDisabled, setSliderDisabled,
   getCustomCategories, saveCustomCategories,
   getSubcategories, saveSubcategories,
   getBrandLogos, saveBrandLogos,
@@ -11,26 +11,33 @@ import {
   getProductViews, getProductSales,
   getStoredCustomers, saveCustomers,
   getStoredOrders, updateOrderStatus,
+  getHomepageSliders, saveHomepageSliders,
+  getSocialLinks, saveSocialLinks,
 } from "./data";
 
 const ADMIN_PASS = "mgp401945222";
 
 // ─── Image resize ─────────────────────────────────────────────────────────────
-const IMG_MAX_W = 800, IMG_MAX_H = 700;
-
-async function resizeImageFile(file) {
+// Resolution presets per context
+const RES = {
+  product:    { w: 800, h: 700, q: 0.82 },
+  slider:     { w: 1200, h: 800, q: 0.85 },
+  category:   { w: 600, h: 450, q: 0.80 },
+  subcategory:{ w: 400, h: 400, q: 0.78 },
+};
+async function resizeImageFile(file, maxW = RES.product.w, maxH = RES.product.h, quality = 0.82) {
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const ratio = Math.min(IMG_MAX_W / img.width, IMG_MAX_H / img.height, 1);
+      const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
       const w = Math.round(img.width * ratio);
       const h = Math.round(img.height * ratio);
       const canvas = document.createElement("canvas");
       canvas.width = w; canvas.height = h;
       canvas.getContext("2d").drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      resolve({ dataUrl: canvas.toDataURL("image/jpeg", 0.80), w, h, origW: img.width, origH: img.height, resized: ratio < 1 });
+      resolve({ dataUrl: canvas.toDataURL("image/jpeg", quality), w, h, origW: img.width, origH: img.height, resized: ratio < 1 });
     };
     img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
     img.src = url;
@@ -45,10 +52,11 @@ function CatImageUploader({ img, onChange, compact }) {
 
   const processFile = async (file) => {
     if (!file || !file.type.startsWith("image/")) return;
-    const result = await resizeImageFile(file);
+    const res = compact ? RES.subcategory : RES.category;
+    const result = await resizeImageFile(file, res.w, res.h, res.q);
     if (result) {
       onChange(result.dataUrl);
-      setResizeInfo(result.resized ? `${result.origW}×${result.origH} → auto-resized to ${result.w}×${result.h}` : `${result.w}×${result.h} (no resize needed)`);
+      setResizeInfo(result.resized ? `${result.origW}×${result.origH} → ${result.w}×${result.h}` : `${result.w}×${result.h} (no resize needed)`);
     }
   };
 
@@ -78,7 +86,7 @@ function CatImageUploader({ img, onChange, compact }) {
         {compact ? "Upload" : "Click or drop image"}
         <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { processFile(e.target.files[0]); e.target.value = ""; }} />
       </div>
-      {!compact && <div style={{ fontSize: 10, color: "#aaa", marginTop: 3 }}>Recommended: min 400×400 px · auto-resized to max {IMG_MAX_W}×{IMG_MAX_H}</div>}
+      {!compact && <div style={{ fontSize: 10, color: "#aaa", marginTop: 3 }}>Auto-resized to {RES.category.w}×{RES.category.h} px</div>}
     </div>
   );
 }
@@ -91,7 +99,7 @@ function ImageUploader({ images, onChange }) {
 
   const processFiles = async (files) => {
     const results = await Promise.all(
-      Array.from(files).filter(f => f.type.startsWith("image/")).map(resizeImageFile)
+      Array.from(files).filter(f => f.type.startsWith("image/")).map(f => resizeImageFile(f, RES.product.w, RES.product.h, RES.product.q))
     );
     const valid = results.filter(Boolean);
     onChange([...images, ...valid.map(r => r.dataUrl)]);
@@ -119,7 +127,7 @@ function ImageUploader({ images, onChange }) {
         <div style={{ fontSize: 13, color: "#555", fontWeight: 600 }}>Drag & drop images here</div>
         <div style={{ fontSize: 11, color: "#aaa", marginTop: 3 }}>or click to choose files · PNG, JPG, WebP</div>
         <div style={{ fontSize: 11, color: "#E65C00", marginTop: 2, fontWeight: 600 }}>
-          Recommended: min 800×700 px — larger images are auto-resized to max {IMG_MAX_W}×{IMG_MAX_H}
+          Recommended: min 800×700 px — larger images are auto-resized to max {RES.product.w}×{RES.product.h}
         </div>
         <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }}
           onChange={(e) => { processFiles(e.target.files); e.target.value = ""; }} />
@@ -152,7 +160,7 @@ function ImageUploader({ images, onChange }) {
 }
 
 // ─── ProductModal ─────────────────────────────────────────────────────────────
-const emptyProduct = { name: "", en: "", desc: "", details: "", specs: [], sku: "", barcode: "", price: "", oldPrice: "", stock: true, stockQty: null, images: [], cat: defaultCategories[0].name, tag: null, disc: null };
+const emptyProduct = { name: "", en: "", desc: "", details: "", specs: [], sku: "", barcode: "", price: "", stock: true, stockQty: null, images: [], cat: defaultCategories[0].name, tag: null, disc: null };
 const inp = { width: "100%", padding: "8px 10px", border: "1.5px solid #ddd", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit" };
 
 function Field({ label, children }) {
@@ -168,7 +176,7 @@ function ProductModal({ prod, onSave, onClose, nextId, allCategories, subcategor
   const initImages = prod ? (prod.images || []) : [];
   const autoSku = `MGP-${String(nextId).padStart(4, "0")}`;
   const [form, setForm] = useState(prod
-    ? { ...prod, images: initImages, price: String(prod.price ?? ""), oldPrice: prod.oldPrice != null ? String(prod.oldPrice) : "" }
+    ? { ...prod, images: initImages, price: String(prod.oldPrice != null ? prod.oldPrice : (prod.price ?? "")) }
     : { ...emptyProduct, id: nextId, sku: autoSku });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const catSubs = subcategories ? subcategories.filter(s => s.parentName === form.cat) : [];
@@ -206,20 +214,24 @@ function ProductModal({ prod, onSave, onClose, nextId, allCategories, subcategor
           </div>
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Price (₾)"><input style={inp} type="number" step="0.01" min="0" placeholder="0.00" value={form.price ?? ""} onChange={e => set("price", e.target.value)} /></Field>
-          <Field label="Old Price (₾)"><input style={inp} type="number" step="0.01" min="0" placeholder="Optional" value={form.oldPrice ?? ""} onChange={e => set("oldPrice", e.target.value)} /></Field>
+          <Field label="Base Price (₾)"><input style={inp} type="number" step="0.01" min="0" placeholder="0.00" value={form.price ?? ""} onChange={e => set("price", e.target.value)} /></Field>
+          <Field label="Discount %"><input style={inp} type="number" min="0" max="99" placeholder="e.g. 20 (optional)" value={form.disc || ""} onChange={e => set("disc", e.target.value ? parseInt(e.target.value) : null)} /></Field>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Discount %"><input style={inp} type="number" min="0" max="99" placeholder="e.g. 20" value={form.disc || ""} onChange={e => set("disc", e.target.value ? parseInt(e.target.value) : null)} /></Field>
-          <Field label="Tag">
-            <select style={inp} value={form.tag || ""} onChange={e => set("tag", e.target.value || null)}>
-              <option value="">None</option>
-              <option value="new">New</option>
-              <option value="hot">Hot</option>
-              <option value="discount">Discount</option>
-            </select>
-          </Field>
-        </div>
+        {form.disc > 0 && parseFloat(form.price) > 0 && (
+          <div style={{ marginBottom: 12, padding: "10px 14px", background: "#FFF7F0", border: "1.5px solid #E65C00", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 12, color: "#888" }}>Final price after {form.disc}% off:</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#E65C00" }}>₾{(parseFloat(form.price) * (1 - form.disc / 100)).toFixed(2)}</span>
+            <span style={{ fontSize: 12, color: "#bbb", textDecoration: "line-through" }}>₾{parseFloat(form.price).toFixed(2)}</span>
+          </div>
+        )}
+        <Field label="Tag">
+          <select style={{ ...inp, width: "50%" }} value={form.tag || ""} onChange={e => set("tag", e.target.value || null)}>
+            <option value="">None</option>
+            <option value="new">New</option>
+            <option value="hot">Hot</option>
+            <option value="discount">Discount</option>
+          </select>
+        </Field>
         <Field label="Category">
           <select style={inp} value={form.cat} onChange={e => { set("cat", e.target.value); set("subcat", null); }}>
             {(allCategories || defaultCategories).map(c => <option key={c.name} value={c.name}>{c.en} ({c.name})</option>)}
@@ -256,7 +268,13 @@ function ProductModal({ prod, onSave, onClose, nextId, allCategories, subcategor
         </Field>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
           <button onClick={onClose} style={{ padding: "9px 20px", border: "1.5px solid #ddd", borderRadius: 9, background: "#fff", cursor: "pointer", fontSize: 13 }}>Cancel</button>
-          <button onClick={() => { if (form.name.trim()) onSave({ ...form, price: parseFloat(form.price) || 0, oldPrice: form.oldPrice !== "" && form.oldPrice != null ? parseFloat(form.oldPrice) || null : null }); }} style={{ padding: "9px 24px", border: "none", borderRadius: 9, background: "#E65C00", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>Save</button>
+          <button onClick={() => {
+            if (!form.name.trim()) return;
+            const base = parseFloat(form.price) || 0;
+            const disc = form.disc ? parseInt(form.disc) : null;
+            const finalPrice = disc ? parseFloat((base * (1 - disc / 100)).toFixed(2)) : base;
+            onSave({ ...form, price: finalPrice, oldPrice: disc ? base : null });
+          }} style={{ padding: "9px 24px", border: "none", borderRadius: 9, background: "#E65C00", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>Save</button>
         </div>
       </div>
     </>
@@ -265,28 +283,33 @@ function ProductModal({ prod, onSave, onClose, nextId, allCategories, subcategor
 
 // ─── CSV Import ───────────────────────────────────────────────────────────────
 function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
+  // Strip BOM and normalize line endings
+  const clean = text.replace(/^\uFEFF/, "").trim();
+  const lines = clean.split(/\r?\n/);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ""));
+  // Auto-detect delimiter: semicolon or comma
+  const delim = lines[0].includes(";") ? ";" : ",";
+  const headers = lines[0].split(delim).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ""));
   return lines.slice(1).map(line => {
     const cols = [];
     let cur = "", inQ = false;
     for (let c of line) {
       if (c === '"') { inQ = !inQ; }
-      else if (c === "," && !inQ) { cols.push(cur); cur = ""; }
+      else if (c === delim && !inQ) { cols.push(cur); cur = ""; }
       else cur += c;
     }
     cols.push(cur);
     const obj = {};
     headers.forEach((h, i) => { obj[h] = (cols[i] || "").trim().replace(/^"|"$/g, ""); });
     return obj;
-  }).filter(r => r.name || r.en);
+  }).filter(r => r.name);
 }
 
 function CSVImportModal({ onClose, onImport, nextId, allCategories }) {
   const [csvText, setCsvText] = useState("");
   const [preview, setPreview] = useState([]);
   const [error, setError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef(null);
 
   const processText = (text) => {
@@ -299,13 +322,23 @@ function CSVImportModal({ onClose, onImport, nextId, allCategories }) {
     } catch { setError("Failed to parse CSV."); setPreview([]); }
   };
 
-  const handleFile = (e) => {
-    const f = e.target.files[0];
+  const readFile = (f) => {
     if (!f) return;
     const reader = new FileReader();
     reader.onload = ev => processText(ev.target.result);
     reader.readAsText(f);
+  };
+
+  const handleFile = (e) => {
+    readFile(e.target.files[0]);
     e.target.value = "";
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files[0];
+    if (f) readFile(f);
   };
 
   const handleImport = () => {
@@ -334,8 +367,8 @@ function CSVImportModal({ onClose, onImport, nextId, allCategories }) {
     onImport(imported);
   };
 
-  const sampleCSV = `name,en,desc,price,oldPrice,cat,tag,disc,stock,sku,barcode
-პროდუქტი,Product Name,Description here,19.99,24.99,HOEGERT,new,,true,MGP-0001,6594119544448`;
+  const sampleCSV = `BARCODE;NAME;SKU;CAT;PRICE;STOCKQTY
+5468794587;პროდუქტი;ht5k505;hogert;2;5500`;
 
   return (
     <>
@@ -346,20 +379,39 @@ function CSVImportModal({ onClose, onImport, nextId, allCategories }) {
           <button onClick={onClose} style={{ background: "#f0f0f0", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 18, cursor: "pointer" }}>×</button>
         </div>
         <div style={{ background: "#f8f8f8", borderRadius: 10, padding: "12px 14px", marginBottom: 14, fontSize: 12, color: "#555" }}>
-          <div style={{ fontWeight: 700, marginBottom: 6 }}>Required columns: <code>name</code> (Georgian). Optional: <code>en, desc, details, price, oldPrice, cat, tag, disc, stock, stockQty, sku, barcode, img</code></div>
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>Columns: <code>BARCODE;NAME;SKU;CAT;PRICE;STOCKQTY</code> — semicolon-separated. Column names are case-insensitive.</div>
           <div style={{ fontWeight: 700, marginBottom: 4 }}>Sample CSV:</div>
           <pre style={{ margin: 0, fontSize: 11, overflowX: "auto", background: "#efefef", padding: "6px 8px", borderRadius: 6 }}>{sampleCSV}</pre>
         </div>
-        <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-          <button onClick={() => fileRef.current?.click()} style={{ padding: "8px 16px", background: "#E65C00", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>📂 Upload CSV File</button>
-          <input ref={fileRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={handleFile} />
+        <input ref={fileRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={handleFile} />
+        <div
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => !csvText && fileRef.current?.click()}
+          style={{ border: `2px dashed ${dragOver ? "#E65C00" : "#ddd"}`, borderRadius: 10, background: dragOver ? "#fff5ef" : "#fafafa", padding: "18px 16px", marginBottom: 12, textAlign: "center", cursor: csvText ? "default" : "pointer", transition: "all 0.15s" }}
+        >
+          {csvText ? (
+            <textarea
+              value={csvText}
+              onChange={e => processText(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              style={{ width: "100%", height: 100, padding: "8px 10px", border: "1px solid #e0e0e0", borderRadius: 7, fontSize: 12, fontFamily: "monospace", resize: "vertical", boxSizing: "border-box", outline: "none", background: "#fff" }}
+            />
+          ) : (
+            <>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>📂</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#444" }}>Drop CSV file here or click to browse</div>
+              <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>Supports semicolon-separated CSV exported from Excel</div>
+            </>
+          )}
         </div>
-        <textarea
-          placeholder={"Paste CSV text here...\n" + sampleCSV}
-          value={csvText}
-          onChange={e => processText(e.target.value)}
-          style={{ width: "100%", height: 120, padding: "10px 12px", border: "1.5px solid #ddd", borderRadius: 9, fontSize: 12, fontFamily: "monospace", resize: "vertical", boxSizing: "border-box", outline: "none" }}
-        />
+        {csvText && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <button onClick={() => fileRef.current?.click()} style={{ padding: "6px 14px", background: "#E65C00", color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>📂 Change File</button>
+            <button onClick={() => { setCsvText(""); setPreview([]); setError(""); }} style={{ padding: "6px 14px", background: "#f0f0f0", color: "#555", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 12 }}>✕ Clear</button>
+          </div>
+        )}
         {error && <div style={{ color: "#dc2626", fontSize: 12, marginTop: 6 }}>{error}</div>}
         {preview.length > 0 && (
           <div style={{ marginTop: 12 }}>
@@ -405,7 +457,7 @@ function ProductsTab({ products, setProducts, allCategories, subcategories }) {
   const saveProd = (form) => {
     const updated = editProd
       ? products.map(p => p.id === form.id ? form : p)
-      : [...products, { ...form, id: nextId }];
+      : [{ ...form, id: nextId }, ...products];
     setProducts(updated);
     saveProducts(updated);
     logActivity("admin", editProd ? "edit_product" : "add_product", form.name);
@@ -414,7 +466,7 @@ function ProductsTab({ products, setProducts, allCategories, subcategories }) {
   };
 
   const importCSV = (imported) => {
-    const updated = [...products, ...imported];
+    const updated = [...imported, ...products];
     setProducts(updated);
     saveProducts(updated);
     logActivity("admin", "csv_import", `Imported ${imported.length} products`);
@@ -559,62 +611,140 @@ function ProductsTab({ products, setProducts, allCategories, subcategories }) {
 // ─── Slider Tab ───────────────────────────────────────────────────────────────
 function SliderTab({ products }) {
   const [config, setConfig] = useState(() => getSliderConfig() || []);
+  const [disabled, setDisabledState] = useState(() => getSliderDisabled());
   const [productId, setProductId] = useState("");
+  const [slideSearch, setSlideSearch] = useState("");
+  const [slideDropOpen, setSlideDropOpen] = useState(false);
   const selStyle = { width: "100%", padding: "8px 10px", border: "1.5px solid #ddd", borderRadius: 8, fontSize: 13, outline: "none", background: "#fff" };
 
   const applyConfig = (next) => { setConfig(next); saveSliderConfig(next); };
-  const addSlide = () => { if (!productId) return; applyConfig([...config, { id: Date.now(), productId: parseInt(productId) }]); setProductId(""); };
+  const toggleDisabled = () => { const next = !disabled; setDisabledState(next); setSliderDisabled(next); };
+  const addSlide = () => { if (!productId) return; applyConfig([...config, { id: Date.now(), productId: parseInt(productId) }]); setProductId(""); setSlideSearch(""); setSlideDropOpen(false); };
+  const slideMatches = slideSearch.trim().length > 0
+    ? products.filter(p => p.name.toLowerCase().includes(slideSearch.toLowerCase()) || (p.en || "").toLowerCase().includes(slideSearch.toLowerCase()))
+    : products;
   const removeSlide = (id) => applyConfig(config.filter(s => s.id !== id));
+
+  const mode = disabled ? "disabled" : config.length > 0 ? "manual" : "empty";
+  const modeColors = { empty: "#888", manual: "#16a34a", disabled: "#888" };
+  const modeLabels = { empty: "Empty", manual: "Manual", disabled: "Disabled" };
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700 }}>Slider Configuration</div>
-          <div style={{ fontSize: 12, color: "#888", marginTop: 3 }}>Each slide shows one product full-width. Leave empty for auto mode (discounted products).</div>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>Homepage Slider</div>
+          <div style={{ fontSize: 12, color: "#888", marginTop: 3 }}>Large banner shown at the top of the home page.</div>
         </div>
-        {config.length > 0 && (
-          <button onClick={() => applyConfig([])} style={{ padding: "7px 14px", border: "1.5px solid #ddd", borderRadius: 8, background: "#fff", cursor: "pointer", fontSize: 12, color: "#555", flexShrink: 0 }}>Reset to Auto</button>
-        )}
+        <span style={{ padding: "4px 12px", borderRadius: 20, background: modeColors[mode] + "22", color: modeColors[mode], fontSize: 12, fontWeight: 700, border: `1.5px solid ${modeColors[mode]}55`, flexShrink: 0 }}>
+          {modeLabels[mode]}
+        </span>
       </div>
-      <div style={{ background: "#fff", borderRadius: 12, padding: "1.25rem", border: "1.5px solid #f0f0f0", marginBottom: 20 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#333", marginBottom: 12 }}>Add Slide</div>
-        <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: "#888", marginBottom: 4 }}>Product</div>
-            <select value={productId} onChange={e => setProductId(e.target.value)} style={selStyle}>
-              <option value="">Select product...</option>
-              {products.map(p => <option key={p.id} value={p.id}>{p.name}{p.en ? ` (${p.en})` : ""}</option>)}
-            </select>
+
+      {/* Mode explanation cards */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        {[
+          { key: "manual", icon: "🎯", title: "Manual Mode", desc: "You choose exactly which products appear as slides. Add products below." },
+          { key: "disabled", icon: "🚫", title: "Disable Slider", desc: "Hide the slider entirely from the home page." },
+        ].map(m => (
+          <div key={m.key} style={{ flex: "1 1 180px", border: `2px solid ${mode === m.key ? modeColors[m.key] : "#e8e8e8"}`, borderRadius: 10, padding: "12px 14px", background: mode === m.key ? modeColors[m.key] + "0d" : "#fafafa", cursor: "default" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{m.icon} {m.title}</div>
+            <div style={{ fontSize: 12, color: "#666", lineHeight: 1.5 }}>{m.desc}</div>
           </div>
-          <button onClick={addSlide} disabled={!productId}
-            style={{ padding: "9px 20px", background: productId ? "#E65C00" : "#e0e0e0", border: "none", borderRadius: 8, color: productId ? "#fff" : "#aaa", fontWeight: 700, cursor: productId ? "pointer" : "default", fontSize: 13, whiteSpace: "nowrap" }}>
-            + Add Slide
-          </button>
-        </div>
+        ))}
       </div>
-      {config.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "2.5rem", color: "#888", background: "#f8f8f8", borderRadius: 12, fontSize: 13 }}>Auto mode active — slider uses discounted products automatically</div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {config.map((slide, i) => {
-            const p = products.find(pr => pr.id === (slide.productId || slide.leftId));
-            const thumb = p && ((p.images && p.images[0]) || p.img);
-            return (
-              <div key={slide.id} style={{ background: "#fff", border: "1.5px solid #f0f0f0", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ color: "#ccc", fontSize: 13, fontWeight: 700, width: 24, flexShrink: 0 }}>#{i + 1}</span>
-                <div style={{ width: 52, height: 52, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {thumb ? <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} /> : <span style={{ fontSize: 22, color: "#ccc" }}>?</span>}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p ? p.name : <span style={{ color: "#ccc" }}>Not found</span>}</div>
-                  {p && p.price > 0 && <div style={{ fontSize: 11, color: "#E65C00" }}>₾{p.price.toFixed(2)}</div>}
-                </div>
-                <button onClick={() => removeSlide(slide.id)} style={{ padding: "5px 12px", border: "1.5px solid #FEE2E2", borderRadius: 7, background: "#FEF2F2", color: "#dc2626", cursor: "pointer", fontSize: 12, fontWeight: 600, flexShrink: 0 }}>Remove</button>
-              </div>
-            );
-          })}
+
+      {/* Disable toggle */}
+      <div style={{ background: "#fff", borderRadius: 12, padding: "1rem 1.25rem", border: "1.5px solid #f0f0f0", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Disable Slider</div>
+          <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>Hide the slider from the home page completely.</div>
         </div>
+        <button onClick={toggleDisabled}
+          style={{ padding: "7px 18px", background: disabled ? "#E65C00" : "#f0f0f0", border: "none", borderRadius: 8, color: disabled ? "#fff" : "#555", fontWeight: 700, cursor: "pointer", fontSize: 13, transition: "all 0.15s" }}>
+          {disabled ? "Enable Slider" : "Disable Slider"}
+        </button>
+      </div>
+
+      {!disabled && (
+        <>
+          <div style={{ background: "#fff", borderRadius: 12, padding: "1.25rem", border: "1.5px solid #f0f0f0", marginBottom: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#333" }}>Manual Slides {config.length > 0 && <span style={{ color: "#888", fontWeight: 400 }}>({config.length} slide{config.length !== 1 ? "s" : ""})</span>}</div>
+              {config.length > 0 && (
+                <button onClick={() => applyConfig([])} style={{ padding: "5px 12px", border: "1.5px solid #ddd", borderRadius: 7, background: "#fff", cursor: "pointer", fontSize: 12, color: "#555" }}>Clear All</button>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+              <div style={{ flex: 1, position: "relative" }}>
+                <div style={{ fontSize: 11, color: "#888", marginBottom: 4 }}>Add product as slide</div>
+                <input
+                  style={{ ...selStyle, cursor: "text" }}
+                  placeholder="Search product by name..."
+                  value={slideSearch}
+                  onFocus={() => setSlideDropOpen(true)}
+                  onBlur={() => setTimeout(() => setSlideDropOpen(false), 150)}
+                  onChange={e => { setSlideSearch(e.target.value); setProductId(""); setSlideDropOpen(true); }}
+                />
+                {productId && (() => { const sel = products.find(p => p.id === parseInt(productId)); return sel ? (
+                  <div style={{ marginTop: 4, padding: "5px 10px", background: "#FFF7F0", border: "1.5px solid #E65C00", borderRadius: 7, fontSize: 12, color: "#E65C00", fontWeight: 600 }}>
+                    ✓ {sel.name}{sel.en ? ` (${sel.en})` : ""}
+                  </div>
+                ) : null; })()}
+                {slideDropOpen && (
+                  <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1.5px solid #ddd", borderRadius: 8, zIndex: 300, maxHeight: 220, overflowY: "auto", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", marginTop: 2 }}>
+                    {slideMatches.length === 0 && (
+                      <div style={{ padding: "10px 12px", fontSize: 12, color: "#aaa" }}>No products found</div>
+                    )}
+                    {slideMatches.map(p => (
+                      <div key={p.id}
+                        onMouseDown={() => { setProductId(String(p.id)); setSlideSearch(p.name + (p.en ? ` (${p.en})` : "")); setSlideDropOpen(false); }}
+                        style={{ padding: "8px 12px", fontSize: 13, cursor: "pointer", borderBottom: "1px solid #f5f5f5", background: parseInt(productId) === p.id ? "#FFF7F0" : "#fff", color: parseInt(productId) === p.id ? "#E65C00" : "#222" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "#FFF7F0"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = parseInt(productId) === p.id ? "#FFF7F0" : "#fff"; }}>
+                        <span style={{ fontWeight: 600 }}>{p.name}</span>
+                        {p.en && <span style={{ color: "#888", fontSize: 12 }}> — {p.en}</span>}
+                        {p.price > 0 && <span style={{ float: "right", color: "#E65C00", fontSize: 12, fontWeight: 700 }}>₾{p.price.toFixed(2)}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button onClick={addSlide} disabled={!productId}
+                style={{ padding: "9px 20px", background: productId ? "#E65C00" : "#e0e0e0", border: "none", borderRadius: 8, color: productId ? "#fff" : "#aaa", fontWeight: 700, cursor: productId ? "pointer" : "default", fontSize: 13, whiteSpace: "nowrap" }}>
+                + Add Slide
+              </button>
+            </div>
+          </div>
+
+          {config.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "2rem", color: "#888", background: "#f8f8f8", borderRadius: 12, fontSize: 13, border: "1.5px dashed #ddd" }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>🖼️</div>
+              <div style={{ fontWeight: 600, color: "#555", marginBottom: 4 }}>No slides configured</div>
+              <div>Select a product above and click "+ Add Slide" to add it to the slider.</div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {config.map((slide, i) => {
+                const p = products.find(pr => pr.id === (slide.productId || slide.leftId));
+                const thumb = p && ((p.images && p.images[0]) || p.img);
+                return (
+                  <div key={slide.id} style={{ background: "#fff", border: "1.5px solid #f0f0f0", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ color: "#ccc", fontSize: 13, fontWeight: 700, width: 24, flexShrink: 0 }}>#{i + 1}</span>
+                    <div style={{ width: 52, height: 52, borderRadius: 8, overflow: "hidden", flexShrink: 0, background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {thumb ? <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} /> : <span style={{ fontSize: 22, color: "#ccc" }}>?</span>}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p ? p.name : <span style={{ color: "#ccc" }}>Not found</span>}</div>
+                      {p && p.price > 0 && <div style={{ fontSize: 11, color: "#E65C00" }}>₾{p.price.toFixed(2)}</div>}
+                    </div>
+                    <button onClick={() => removeSlide(slide.id)} style={{ padding: "5px 12px", border: "1.5px solid #FEE2E2", borderRadius: 7, background: "#FEF2F2", color: "#dc2626", cursor: "pointer", fontSize: 12, fontWeight: 600, flexShrink: 0 }}>Remove</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -685,6 +815,86 @@ function BannersTab() {
   );
 }
 
+// ─── Homepage Sliders Tab ─────────────────────────────────────────────────────
+function HomepageSlidersTab({ allCategories }) {
+  const [enabled, setEnabled] = useState(() => getHomepageSliders());
+  const [saved, setSaved] = useState(false);
+
+  const toggle = name => {
+    setEnabled(prev =>
+      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+    );
+    setSaved(false);
+  };
+
+  const handleSave = () => {
+    saveHomepageSliders(enabled);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const inp = { width: "100%", padding: "9px 12px", border: "1.5px solid #ddd", borderRadius: 8, fontSize: 14, outline: "none", fontFamily: "inherit" };
+
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Homepage Category Sliders</div>
+      <div style={{ fontSize: 13, color: "#888", marginBottom: 20 }}>Choose which categories appear as product sliders on the home page. The browse sidebar and category grid are not affected.</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+        {allCategories.map(cat => {
+          const on = enabled.includes(cat.name);
+          return (
+            <div key={cat.name} onClick={() => toggle(cat.name)}
+              style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 10, border: `1.5px solid ${on ? "#E65C00" : "#e8e8e8"}`, background: on ? "#FFF8F5" : "#fff", cursor: "pointer", transition: "all 0.15s" }}>
+              <div style={{ width: 20, height: 20, borderRadius: 5, border: `2px solid ${on ? "#E65C00" : "#ccc"}`, background: on ? "#E65C00" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {on && <span style={{ color: "#fff", fontSize: 12, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+              </div>
+              <span style={{ fontSize: 18 }}>{cat.icon || "📦"}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>{cat.name}</div>
+                <div style={{ fontSize: 11, color: "#aaa" }}>{cat.en}</div>
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: on ? "#E65C00" : "#bbb" }}>{on ? "SHOWN" : "HIDDEN"}</div>
+            </div>
+          );
+        })}
+      </div>
+      <button onClick={handleSave} style={{ background: "#E65C00", color: "#fff", border: "none", borderRadius: 9, padding: "11px 28px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+        {saved ? "✓ Saved!" : "Save"}
+      </button>
+    </div>
+  );
+}
+
+// ─── Socials Tab ──────────────────────────────────────────────────────────────
+function SocialsTab() {
+  const [s, setS] = useState(() => getSocialLinks());
+  const [saved, setSaved] = useState(false);
+  const inp = { width: "100%", padding: "9px 12px", border: "1.5px solid #ddd", borderRadius: 8, fontSize: 14, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
+  const set = (k, v) => { setS(p => ({ ...p, [k]: v })); setSaved(false); };
+
+  const handleSave = () => { saveSocialLinks(s); setSaved(true); setTimeout(() => setSaved(false), 2000); };
+
+  return (
+    <div style={{ maxWidth: 520 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Social Media Links</div>
+      <div style={{ fontSize: 13, color: "#888", marginBottom: 24 }}>These appear in the site header and on the contact page.</div>
+      {[
+        { key: "facebook", label: "Facebook URL", placeholder: "https://www.facebook.com/yourpage", icon: "📘" },
+        { key: "instagram", label: "Instagram URL", placeholder: "https://www.instagram.com/yourhandle", icon: "📸" },
+        { key: "whatsapp", label: "WhatsApp Number", placeholder: "+995599000000", icon: "💬" },
+      ].map(({ key, label, placeholder, icon }) => (
+        <div key={key} style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 6 }}>{icon} {label}</div>
+          <input style={inp} value={s[key] || ""} onChange={e => set(key, e.target.value)} placeholder={placeholder} />
+        </div>
+      ))}
+      <button onClick={handleSave} style={{ background: "#E65C00", color: "#fff", border: "none", borderRadius: 9, padding: "11px 28px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+        {saved ? "✓ Saved!" : "Save"}
+      </button>
+    </div>
+  );
+}
+
 // ─── SEO Tab ──────────────────────────────────────────────────────────────────
 function SEOTab() {
   const [seo, setSEO] = useState(() => getSEOSettings());
@@ -746,7 +956,7 @@ function CategoriesTab({ onConfigChange }) {
   const [addSubFor, setAddSubFor] = useState(null);
   const [editingCat, setEditingCat] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [newCat, setNewCat] = useState({ name: "", en: "", ru: "", icon: "📦", color: "#555555", bg: "#f5f5f5" });
+  const [newCat, setNewCat] = useState({ name: "", en: "", ru: "", icon: "📦", color: "#555555", bg: "#f5f5f5", img: "" });
   const [newSub, setNewSub] = useState({ name: "", en: "", icon: "", img: "" });
 
   const saveOverrides = (next) => {
@@ -771,14 +981,14 @@ function CategoriesTab({ onConfigChange }) {
     saveOverrides({ ...catOverrides, [catName]: { ...cur, hidden: !cur.hidden } });
   };
 
-  const allCats = [...defaultCategories, ...customCats];
+  const allCats = [...customCats, ...defaultCategories];
 
   const saveCat = () => {
     if (!newCat.name.trim() || !newCat.en.trim()) return;
-    const updated = [...customCats, { ...newCat, id: Date.now() }];
+    const updated = [{ ...newCat, id: Date.now() }, ...customCats];
     setCustomCats(updated);
     saveCustomCategories(updated);
-    setNewCat({ name: "", en: "", ru: "", icon: "📦", color: "#555555", bg: "#f5f5f5" });
+    setNewCat({ name: "", en: "", ru: "", icon: "📦", color: "#555555", bg: "#f5f5f5", img: "" });
     setShowAddCat(false);
     onConfigChange?.();
   };
@@ -866,6 +1076,10 @@ function CategoriesTab({ onConfigChange }) {
               <span style={{ fontSize: 22 }}>{newCat.icon}</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: newCat.color }}>{newCat.en || "Preview"}</span>
             </div>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: "#888", marginBottom: 4 }}>Category Image (optional)</div>
+            <CatImageUploader img={newCat.img || ""} onChange={img => setNewCat(c => ({ ...c, img }))} />
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => setShowAddCat(false)} style={{ padding: "8px 16px", border: "1.5px solid #ddd", borderRadius: 8, background: "#fff", cursor: "pointer", fontSize: 13 }}>Cancel</button>
@@ -1018,8 +1232,8 @@ function BrandsTab() {
   const processFiles = async (files) => {
     const results = await Promise.all(
       Array.from(files).filter(f => f.type.startsWith("image/")).map(async (file) => {
-        const b64 = await resizeImageFile(file);
-        return b64 ? { id: Date.now() + Math.random(), src: b64, name: file.name.replace(/\.[^.]+$/, "") } : null;
+        const res = await resizeImageFile(file, 400, 200, 0.90);
+        return res ? { id: Date.now() + Math.random(), src: res.dataUrl, name: file.name.replace(/\.[^.]+$/, "") } : null;
       })
     );
     const next = [...logos, ...results.filter(Boolean)];
@@ -1055,7 +1269,8 @@ function BrandsTab() {
       >
         <div style={{ fontSize: 30, marginBottom: 6 }}>🏷️</div>
         <div style={{ fontSize: 13, color: "#555", fontWeight: 600 }}>Drag & drop brand logos here</div>
-        <div style={{ fontSize: 11, color: "#aaa", marginTop: 3 }}>or click to choose files · PNG, JPG, SVG · auto-resized</div>
+        <div style={{ fontSize: 11, color: "#aaa", marginTop: 3 }}>or click to choose files · PNG, JPG, SVG · auto-resized to 400×200px</div>
+        <div style={{ fontSize: 11, color: "#E65C00", marginTop: 6, fontWeight: 600 }}>💡 Best results: PNG with transparent background, at least 300×100px</div>
         <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }}
           onChange={(e) => { processFiles(e.target.files); e.target.value = ""; }} />
       </div>
@@ -1522,6 +1737,8 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
     { id: "banners", label: "Banners" },
     { id: "brands", label: "Brands" },
     { id: "seo", label: "SEO" },
+    { id: "socials", label: "Socials" },
+    { id: "homepage", label: "Homepage" },
     { id: "analytics", label: "Analytics" },
     { id: "activity", label: "Activity Log" },
   ];
@@ -1549,6 +1766,8 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
         {tab === "banners" && <BannersTab />}
         {tab === "brands" && <BrandsTab />}
         {tab === "seo" && <SEOTab />}
+        {tab === "socials" && <SocialsTab />}
+        {tab === "homepage" && <HomepageSlidersTab allCategories={allCategories} />}
         {tab === "analytics" && <AnalyticsTab products={products} />}
         {tab === "activity" && <ActivityTab />}
       </div>
