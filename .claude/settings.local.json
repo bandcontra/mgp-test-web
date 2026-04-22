@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start *)",
+      "Bash(npx react-scripts *)",
+      "Bash(python3 -c \"import sys,json; lines=sys.stdin.read\\(\\).strip\\(\\).split\\('\\\\n'\\); [print\\(json.loads\\(l\\).get\\('message',{}\\).get\\('content',''\\)[:500] if isinstance\\(json.loads\\(l\\).get\\('message',{}\\).get\\('content',''\\),str\\) else str\\(json.loads\\(l\\).get\\('message',{}\\).get\\('content',''\\)\\)[:500]\\) for l in lines[-5:] if l]\")",
+      "Bash(npm run *)",
+      "Bash(git --version)"
+    ]
+  }
+}
