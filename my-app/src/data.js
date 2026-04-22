@@ -1,9 +1,71 @@
+import supabase from './supabase';
+
 export const BASE = "https://mgp.ge/timthumb/thumb.php?src=/upload/";
 export const SZ = "&w=280&h=210&zc=1&q=100";
 export const SZ_LG = "&w=600&h=500&zc=1&q=100";
 
 export const HOEGERT_NAME = "HOEGERT";
 export const OLD_HOGERT_CATS = ["HOGERT სახარჯი მასალები", "HOGERT GERMAN ხელსაწყოები"];
+
+// ── Supabase row ↔ JS product mappers ─────────────────────────────────────────
+function rowToProduct(row) {
+  return {
+    id: row.id, name: row.name, en: row.en || null,
+    desc: row.description || null, details: row.details || null,
+    specs: row.specs || [], sku: row.sku || null, barcode: row.barcode || null,
+    price: parseFloat(row.price) || 0,
+    oldPrice: row.old_price ? parseFloat(row.old_price) : null,
+    stock: row.stock !== false,
+    stockQty: row.stock_qty != null ? row.stock_qty : null,
+    images: row.images || [], img: row.img || null,
+    cat: row.cat || null, tag: row.tag || null,
+    disc: row.disc || null, subcat: row.subcat || null,
+  };
+}
+
+function productToRow(p) {
+  return {
+    id: p.id, name: p.name, en: p.en || null,
+    description: p.desc || null, details: p.details || null,
+    specs: p.specs || [], sku: p.sku || null, barcode: p.barcode || null,
+    price: p.price || 0, old_price: p.oldPrice || null,
+    stock: p.stock !== false,
+    stock_qty: p.stockQty != null ? p.stockQty : null,
+    images: (p.images || []).filter(src => !src.startsWith('data:')), // skip base64 for DB
+    img: p.img || null, cat: p.cat || null, tag: p.tag || null,
+    disc: p.disc || null, subcat: p.subcat || null,
+  };
+}
+
+export async function fetchProductsFromDB() {
+  try {
+    const { data, error } = await supabase.from('products').select('*').order('id');
+    if (error) return null;
+    return data.map(rowToProduct);
+  } catch { return null; }
+}
+
+export async function saveProductsToDB(prods) {
+  try {
+    const { error } = await supabase.from('products').upsert(prods.map(productToRow), { onConflict: 'id' });
+    return !error;
+  } catch { return false; }
+}
+
+export async function fetchOrdersFromDB() {
+  try {
+    const { data, error } = await supabase.from('orders').select('*').order('date', { ascending: false });
+    if (error) return null;
+    return data.map(o => ({
+      orderNumber: o.order_number, customerId: o.customer_id,
+      customerName: o.customer_name, phone: o.phone, email: o.email,
+      address: o.address, items: o.items || [],
+      total: parseFloat(o.total) || 0, paymentMethod: o.payment_method,
+      status: o.status || 'pending', statusHistory: o.status_history || [],
+      date: o.date,
+    }));
+  } catch { return null; }
+}
 
 export const defaultCategories = [
   { name: "სამაგრი საშუალებები", en: "Fasteners", ru: "Крепежи", icon: "🔩", color: "#1E3A5F", bg: "#EFF6FF", img: "https://mgp.ge/upload/e59kjlsFKcfS52ICLiPEEuEiDYIJw5.jpg" },
@@ -100,6 +162,7 @@ export function getStoredProducts() {
 
 export function saveProducts(prods) {
   localStorage.setItem('mgp_products', JSON.stringify(prods));
+  saveProductsToDB(prods).catch(() => {});
 }
 
 export function getCatSettings() {
@@ -267,6 +330,19 @@ export function saveOrder(order) {
     orders.unshift({ ...order, status: order.status || "pending" });
     localStorage.setItem('mgp_orders', JSON.stringify(orders.slice(0, 1000)));
   } catch {}
+  supabase.from('orders').insert({
+    order_number: order.orderNumber,
+    customer_id: order.customerId || null,
+    customer_name: order.customerName || null,
+    phone: order.phone || null,
+    email: order.email || null,
+    address: order.address || null,
+    items: order.items || [],
+    total: order.total || 0,
+    payment_method: order.paymentMethod || 'cash',
+    status: order.status || 'pending',
+    date: order.date || new Date().toISOString(),
+  }).then(({ error }) => { if (error) console.error('Order DB error:', error); });
 }
 
 export function updateOrderStatus(orderNumber, status) {
@@ -278,6 +354,11 @@ export function updateOrderStatus(orderNumber, status) {
         : o
     );
     localStorage.setItem('mgp_orders', JSON.stringify(updated));
+    supabase.from('orders').select('status_history').eq('order_number', orderNumber).single()
+      .then(({ data }) => {
+        const history = [...(data?.status_history || []), { status, ts: new Date().toISOString() }];
+        return supabase.from('orders').update({ status, status_history: history }).eq('order_number', orderNumber);
+      }).catch(() => {});
     return updated;
   } catch { return null; }
 }

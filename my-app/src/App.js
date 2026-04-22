@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import AdminPanel from "./AdminPanel";
-import { defaultCategories as categories, HOEGERT_NAME, SZ, SZ_LG, getStoredProducts, getSEOSettings, getHeaderBanners, getSliderConfig, getSliderDisabled, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed, getHomepageSliders, getSocialLinks } from "./data";
+import { defaultCategories as categories, defaultProducts, HOEGERT_NAME, SZ, SZ_LG, getStoredProducts, saveProducts, fetchProductsFromDB, saveProductsToDB, getSEOSettings, getHeaderBanners, getSliderConfig, getSliderDisabled, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed, getHomepageSliders, getSocialLinks } from "./data";
 import mgpLogo from "./mgp-favicon_3.png";
 
 const HOEGERT_CAT = HOEGERT_NAME;
@@ -940,6 +940,16 @@ export default function App() {
     if (!window.history.state) {
       window.history.replaceState({ page: "home", cat: "all" }, "", window.location.pathname);
     }
+  }, []);
+
+  // Load products from Supabase on mount; seed DB if empty
+  useEffect(() => {
+    fetchProductsFromDB().then(dbProds => {
+      if (!dbProds) return;
+      if (dbProds.length === 0) { saveProductsToDB(defaultProducts); return; }
+      setProducts(dbProds);
+      saveProducts(dbProds);
+    });
   }, []);
 
   // Apply SEO meta tags on mount
