@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import AdminPanel from "./AdminPanel";
 import { defaultCategories as categories, getStoredProducts, getSEOSettings, getHeaderBanners, getSliderConfig, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed } from "./data";
+import mgpLogo from "./mgp-favicon_3.png";
 
 const HOEGERT_CAT = "HOEGERT";
 
@@ -239,7 +240,7 @@ function PromoSlider({ t, lang, onShop, onView, products, sliderConfig }) {
   const name = lang === "en" ? (p.en || p.name) : p.name;
 
   return (
-    <div style={{ height: 380, display: "flex", overflow: "hidden", position: "relative", flexShrink: 0 }}>
+    <div style={{ height: "100%", minHeight: 380, display: "flex", overflow: "hidden", position: "relative", flexShrink: 0 }}>
       <div style={{ width: "42%", background: "#1a1a1a", display: "flex", flexDirection: "column", justifyContent: "center", padding: "2.5rem 3rem", flexShrink: 0, zIndex: 1 }}>
         {p.disc && (
           <div style={{ marginBottom: 14 }}>
@@ -854,10 +855,7 @@ function CheckoutModal({ t, lang, cart, cartTotal, onClose, onSuccess, onTrackSa
 }
 
 const MGPLogo = () => (
-  <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
-    <rect width="42" height="42" rx="7" fill="white" fillOpacity="0.2" />
-    <text x="21" y="27" textAnchor="middle" fill="white" fontSize="15" fontWeight="800" fontFamily="sans-serif">MGP</text>
-  </svg>
+  <img src={mgpLogo} alt="Master Group" style={{ width: 42, height: 42, borderRadius: 7, objectFit: "cover" }} />
 );
 
 function BrandsSlider({ logos }) {
@@ -938,6 +936,13 @@ export default function App() {
   ];
   const t = translations[lang];
 
+  // Seed initial history state so back button has somewhere to go
+  useEffect(() => {
+    if (!window.history.state) {
+      window.history.replaceState({ page: "home", cat: "all" }, "", window.location.pathname);
+    }
+  }, []);
+
   // Apply SEO meta tags on mount
   useEffect(() => {
     const seo = getSEOSettings();
@@ -952,11 +957,21 @@ export default function App() {
     setMeta("keywords", seo.keywords);
   }, []);
 
-  // Handle browser back button
+  // Handle browser back/forward buttons
   useEffect(() => {
-    const onPop = () => {
-      const path = window.location.pathname;
-      setPage(path === "/admin" || path.startsWith("/admin/") ? "admin" : "home");
+    const onPop = (e) => {
+      const state = e.state;
+      if (state && state.page) {
+        setPage(state.page);
+        setSelectedProduct(state.product || null);
+        setSelectedCat(state.cat || "all");
+        setSelectedSubcat(state.subcat || null);
+        window.scrollTo(0, 0);
+      } else {
+        const path = window.location.pathname;
+        setPage(path === "/admin" || path.startsWith("/admin/") ? "admin" : "home");
+        setSelectedProduct(null);
+      }
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -1009,13 +1024,19 @@ export default function App() {
   const cartTotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
 
   const goHome = () => {
-    if (window.location.pathname !== "/") window.history.pushState({}, "", "/");
+    window.history.pushState({ page: "home", cat: "all" }, "", "/");
     setPage("home"); setSelectedCat("all"); setSearch(""); setSelectedProduct(null); window.scrollTo(0, 0);
     refreshAdminConfig();
   };
-  const goSeeAll = (catName) => { setSelectedCat(catName); setSelectedSubcat(null); setPage("catalog"); setSelectedProduct(null); window.scrollTo(0, 0); };
-  const goToProduct = (p) => { setPrevPage(page); setSelectedProduct(p); setPage("product"); trackProductView(p.id); addToRecentlyViewed(p.id); setRecentlyViewed(getRecentlyViewed()); };
-  const goBack = () => { setPage(prevPage); setSelectedProduct(null); window.scrollTo(0, 0); };
+  const goSeeAll = (catName) => {
+    window.history.pushState({ page: "catalog", cat: catName }, "", "/catalog");
+    setSelectedCat(catName); setSelectedSubcat(null); setPage("catalog"); setSelectedProduct(null); window.scrollTo(0, 0);
+  };
+  const goToProduct = (p) => {
+    window.history.pushState({ page: "product", product: p, cat: selectedCat, subcat: selectedSubcat }, "", "/product/" + p.id);
+    setPrevPage(page); setSelectedProduct(p); setPage("product"); trackProductView(p.id); addToRecentlyViewed(p.id); setRecentlyViewed(getRecentlyViewed());
+  };
+  const goBack = () => { window.history.back(); };
 
   const pMin = priceMin !== "" ? parseFloat(priceMin) : null;
   const pMax = priceMax !== "" ? parseFloat(priceMax) : null;
@@ -1043,7 +1064,7 @@ export default function App() {
   const navActivePage = page === "product" ? prevPage : page;
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', sans-serif", minHeight: "100vh", background: "#F4F4F4" }}>
+    <div style={{ fontFamily: "'Segoe UI', sans-serif", minHeight: "100vh", background: "#F4F4F4", overflowX: "hidden" }}>
       <AnnouncementBar banners={headerBanners} />
       <style>{`
         .prod-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.10); }
@@ -1141,7 +1162,7 @@ export default function App() {
         <div className="nav-links" style={{ display: "flex", gap: 22, alignItems: "center", flexShrink: 0 }}>
           {[["home", t.home], ["catalog", t.catalog], ["contact", t.contact]].map(([p, label]) => (
             <span key={p} style={{ color: "#fff", fontSize: 13, cursor: "pointer", fontWeight: navActivePage === p ? 700 : 400, borderBottom: navActivePage === p ? "2px solid #fff" : "2px solid transparent", paddingBottom: 2, opacity: navActivePage === p ? 1 : 0.82 }}
-              onClick={() => { if (p === "home") goHome(); else { setPage(p); setSelectedProduct(null); window.scrollTo(0, 0); } }}>{label}</span>
+              onClick={() => { if (p === "home") goHome(); else { window.history.pushState({ page: p }, "", "/" + p); setPage(p); setSelectedProduct(null); window.scrollTo(0, 0); } }}>{label}</span>
           ))}
         </div>
 
@@ -1233,7 +1254,7 @@ export default function App() {
           {/* Sidebar + category grid */}
           <div style={{ display: "grid", gridTemplateColumns: "246px 1fr", background: "#fff", position: "relative" }}>
             {/* Dark sidebar */}
-            <div className="sidebar-col" style={{ background: "#1a1a1a", padding: "1.25rem 0.875rem", overflowY: "auto", overflowX: "hidden", maxHeight: 480, minWidth: 0 }}>
+            <div className="sidebar-col" style={{ background: "#1a1a1a", padding: "1.25rem 0.875rem", overflowY: "auto", overflowX: "hidden", height: 480, minWidth: 0 }}>
               <div style={{ fontSize: 10, color: "#E65C00", fontWeight: 700, letterSpacing: 1.5, marginBottom: "0.875rem", paddingLeft: 4 }}>BROWSE PRODUCTS</div>
               {allCategories.map(cat => {
                 const catSubcats = subcategories.filter(s => s.parentName === cat.name);
@@ -1263,38 +1284,11 @@ export default function App() {
               })}
             </div>
 
-            {/* Large image category cards — m2m.ge style */}
-            <div style={{ padding: "1.25rem 1.5rem", background: "#f4f4f4" }}>
-              <div style={{ fontSize: 10, color: "#888", fontWeight: 700, letterSpacing: 1.5, marginBottom: "1rem" }}>{t.featured.toUpperCase()}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
-                {allCategories.map(cat => {
-                  const catLabel = lang === "en" ? cat.en : lang === "ru" ? (cat.ru || cat.en) : cat.name;
-                  return (
-                    <div key={cat.name} onClick={() => goSeeAll(cat.name)}
-                      className="cat-card"
-                      style={{
-                        position: "relative", borderRadius: 12, overflow: "hidden", cursor: "pointer", height: 166,
-                        background: cat.bg || "#2a2a2a",
-                        border: `2px solid ${cat.color || "#ddd"}33`,
-                        boxShadow: `0 4px 0 ${cat.color || "#ccc"}55, 0 6px 18px rgba(0,0,0,0.14)`,
-                        transform: "translateY(0)",
-                        transition: "transform 0.18s, box-shadow 0.18s",
-                      }}>
-                      {cat.img
-                        ? <img src={cat.img} alt={cat.en} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.35s" }} className="cat-card-img" onError={e => { e.target.style.display = "none"; }} />
-                        : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, background: cat.bg || "#f0f0f0" }}>{cat.icon || "📦"}</div>}
-                      {/* Top-left accent stripe */}
-                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: cat.color || "#E65C00", opacity: 0.85 }} />
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)" }} />
-                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px 13px 14px" }}>
-                        {cat.icon && <div style={{ fontSize: 14, marginBottom: 3 }}>{cat.icon}</div>}
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1.25, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{catLabel}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            {/* Slider in the right column, next to the sidebar */}
+            <div style={{ minWidth: 0, overflow: "hidden", height: "100%" }}>
+              <PromoSlider t={t} lang={lang} onShop={() => setPage("catalog")} onView={goToProduct} products={products} sliderConfig={sliderConfig} />
             </div>
+
           </div>
 
           {/* Hover flyout for sub-categories — image card grid */}
@@ -1305,8 +1299,8 @@ export default function App() {
               <div
                 onMouseEnter={() => clearTimeout(flyTimer.current)}
                 onMouseLeave={() => { flyTimer.current = setTimeout(() => setHoveredCat(null), 160); }}
-                style={{ position: "fixed", left: 246, top: flyoutTop, zIndex: 250, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", border: "1px solid #e8e8e8", padding: 14, maxWidth: 380 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(88px, 1fr))", gap: 10 }}>
+                style={{ position: "fixed", left: 246, top: flyoutTop, zIndex: 250, background: "#fff", borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", border: "1px solid #e8e8e8", padding: 14, width: 360 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
                   {catSubs.map(sub => (
                     <div key={sub.id}
                       onClick={() => { setSelectedSubcat(sub.id); goSeeAll(hoveredCat); setHoveredCat(null); }}
@@ -1328,8 +1322,38 @@ export default function App() {
             );
           })()}
 
-          {/* Hero slider below categories */}
-          <PromoSlider t={t} lang={lang} onShop={() => setPage("catalog")} onView={goToProduct} products={products} sliderConfig={sliderConfig} />
+          {/* Large image category cards — m2m.ge style */}
+          <div style={{ padding: "1.25rem 1.5rem", background: "#f4f4f4", overflowX: "hidden" }}>
+            <div style={{ fontSize: 10, color: "#888", fontWeight: 700, letterSpacing: 1.5, marginBottom: "1rem" }}>{t.featured.toUpperCase()}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
+              {allCategories.map(cat => {
+                const catLabel = lang === "en" ? cat.en : lang === "ru" ? (cat.ru || cat.en) : cat.name;
+                return (
+                  <div key={cat.name} onClick={() => goSeeAll(cat.name)}
+                    className="cat-card"
+                    style={{
+                      position: "relative", borderRadius: 12, overflow: "hidden", cursor: "pointer", height: 166,
+                      background: cat.bg || "#2a2a2a",
+                      border: `2px solid ${cat.color || "#ddd"}33`,
+                      boxShadow: `0 4px 0 ${cat.color || "#ccc"}55, 0 6px 18px rgba(0,0,0,0.14)`,
+                      transform: "translateY(0)",
+                      transition: "transform 0.18s, box-shadow 0.18s",
+                    }}>
+                    {cat.img
+                      ? <img src={cat.img} alt={cat.en} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.35s" }} className="cat-card-img" onError={e => { e.target.style.display = "none"; }} />
+                      : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, background: cat.bg || "#f0f0f0" }}>{cat.icon || "📦"}</div>}
+                    {/* Top-left accent stripe */}
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: cat.color || "#E65C00", opacity: 0.85 }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)" }} />
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px 13px 14px" }}>
+                      {cat.icon && <div style={{ fontSize: 14, marginBottom: 3 }}>{cat.icon}</div>}
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1.25, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{catLabel}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
           <BrandsSlider logos={brandLogos} />
           <div style={{ paddingTop: "1.5rem", paddingBottom: "1rem" }}>
             {/* Recently Viewed */}
