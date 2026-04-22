@@ -128,7 +128,7 @@ function ProductCard({ p, t, onAdd, onView, lang, cats, wishlist, onToggleWishli
       <div style={{ height: 3, background: accentColor, flexShrink: 0 }} />
       <div style={{ position: "relative", height: 155, background: cat ? cat.bg : "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", padding: 10 }}>
         {img && !imgErr
-          ? <img src={img} alt={displayName} onError={() => setImgErr(true)} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          ? <img src={img} alt={displayName} onError={() => setImgErr(true)} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           : <span style={{ fontSize: 48 }}>{cat?.icon || "📦"}</span>}
         {p.images && p.images.length > 1 && (
           <span style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}>+{p.images.length}</span>
@@ -178,7 +178,7 @@ function CategorySlider({ cat, allProducts, t, onAdd, onSeeAll, onView, lang, ca
   const catLabel = lang === "en" ? cat.en : lang === "ru" ? cat.ru : cat.name;
   const accent = cat.color || "#E65C00";
   return (
-    <div style={{ margin: "0 2rem 2rem", background: "#fff", borderRadius: 16, border: "1.5px solid #ebebeb", boxShadow: "0 2px 16px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+    <div className="cat-slider" style={{ margin: "0 2rem 2rem", background: "#fff", borderRadius: 16, border: "1.5px solid #ebebeb", boxShadow: "0 2px 16px rgba(0,0,0,0.06)", overflow: "hidden" }}>
       {/* Colored top accent bar */}
       <div style={{ height: 4, background: `linear-gradient(90deg, ${accent} 0%, ${accent}88 100%)`, flexShrink: 0 }} />
       {/* Header row */}
@@ -240,18 +240,18 @@ function PromoSlider({ t, lang, onShop, onView, products, sliderConfig }) {
   const name = lang === "en" ? (p.en || p.name) : p.name;
 
   return (
-    <div style={{ height: "100%", minHeight: 380, display: "flex", overflow: "hidden", position: "relative", flexShrink: 0 }}>
-      <div style={{ width: "42%", background: "#1a1a1a", display: "flex", flexDirection: "column", justifyContent: "center", padding: "2.5rem 3rem", flexShrink: 0, zIndex: 1 }}>
+    <div className="promo-slider" style={{ height: "100%", minHeight: 380, display: "flex", overflow: "hidden", position: "relative", flexShrink: 0 }}>
+      <div className="promo-left" style={{ width: "42%", background: "#1a1a1a", display: "flex", flexDirection: "column", justifyContent: "center", padding: "2.5rem 3rem", flexShrink: 0, zIndex: 1 }}>
         {p.disc && (
           <div style={{ marginBottom: 14 }}>
             <span style={{ background: "#E65C00", color: "#fff", fontSize: 12, fontWeight: 800, padding: "5px 14px", borderRadius: 6 }}>{p.disc}% OFF</span>
           </div>
         )}
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1.35, marginBottom: 12 }}>{name}</div>
-        {p.desc && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.65, marginBottom: 20, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.desc}</div>}
+        <div className="promo-title" style={{ fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1.35, marginBottom: 12 }}>{name}</div>
+        {p.desc && <div className="promo-desc" style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.65, marginBottom: 20, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.desc}</div>}
         <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 26 }}>
           {p.price > 0
-            ? <><span style={{ fontSize: 30, fontWeight: 800, color: "#E65C00" }}>₾{p.price.toFixed(2)}</span>{p.oldPrice && <span style={{ fontSize: 15, color: "#555", textDecoration: "line-through" }}>₾{p.oldPrice.toFixed(2)}</span>}</>
+            ? <><span className="promo-price" style={{ fontSize: 30, fontWeight: 800, color: "#E65C00" }}>₾{p.price.toFixed(2)}</span>{p.oldPrice && <span style={{ fontSize: 15, color: "#555", textDecoration: "line-through" }}>₾{p.oldPrice.toFixed(2)}</span>}</>
             : <span style={{ fontSize: 14, color: "#666" }}>კონტაქტი / Call</span>}
         </div>
         <div style={{ display: "flex", gap: 10 }}>
@@ -266,8 +266,8 @@ function PromoSlider({ t, lang, onShop, onView, products, sliderConfig }) {
           </div>
         )}
       </div>
-      <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#111" }}>
-        {img && <img src={img} alt={name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.88 }} />}
+      <div className="promo-right" style={{ flex: 1, position: "relative", overflow: "hidden", background: "#111" }}>
+        {img && <img src={img} alt={name} loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.88 }} />}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(26,26,26,0.65) 0%, transparent 45%)" }} />
       </div>
     </div>
@@ -308,7 +308,7 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
   return (
     <div style={{ display: "flex", minHeight: "70vh" }}>
       {/* Left category sidebar */}
-      <div className="sidebar-col" style={{ width: 220, flexShrink: 0, background: "#1a1a1a", padding: "1.25rem 0.875rem", overflowY: "auto", alignSelf: "stretch" }}>
+      <div className="sidebar-col product-sidebar" style={{ width: 220, flexShrink: 0, background: "#1a1a1a", padding: "1.25rem 0.875rem", overflowY: "auto", alignSelf: "stretch" }}>
         <div style={{ fontSize: 10, color: "#E65C00", fontWeight: 700, letterSpacing: 1.5, marginBottom: "0.875rem", paddingLeft: 4 }}>BROWSE</div>
         {allCatsForSidebar.map(cat => {
           const catSubs = (subcategories || []).filter(s => s.parentName === cat.name);
@@ -345,7 +345,7 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ borderRadius: 12, background: cat ? cat.bg : "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 320, position: "relative", overflow: "hidden" }}>
             {displayImg && !imgErr
-              ? <img src={displayImg} alt={displayName} onError={() => setImgErr(true)} style={{ width: "100%", height: "100%", objectFit: "contain", maxHeight: 400, padding: "1.5rem" }} />
+              ? <img src={displayImg} alt={displayName} onError={() => setImgErr(true)} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "contain", maxHeight: 400, padding: "1.5rem" }} />
               : (cat && cat.icon ? <span style={{ fontSize: 100 }}>{cat.icon}</span> : <span style={{ fontSize: 100 }}>📦</span>)}
             {p.disc && (
               <div style={{ position: "absolute", top: 16, right: 16, width: 60, height: 60, borderRadius: "50%", background: "#E65C00", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 12px rgba(230,92,0,0.4)" }}>
@@ -364,7 +364,7 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
               {images.map((src, i) => (
                 <div key={i} onClick={() => { setActiveImg(i); setImgErr(false); }}
                   style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: `2px solid ${i === activeImg ? "#E65C00" : "#e0e0e0"}`, background: cat ? cat.bg : "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+                  <img src={src} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
                 </div>
               ))}
             </div>
@@ -866,7 +866,7 @@ function BrandsSlider({ logos }) {
       <div style={{ display: "flex", animation: "brandScroll 14s linear infinite", width: "max-content" }}>
         {all.map((b, i) => (
           <div key={i} style={{ padding: "0 52px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img src={b.src} alt={b.name} style={{ height: 34, objectFit: "contain", mixBlendMode: "multiply", opacity: 0.72, filter: "grayscale(15%)" }} />
+            <img src={b.src} alt={b.name} loading="lazy" style={{ height: 34, objectFit: "contain", mixBlendMode: "multiply", opacity: 0.72, filter: "grayscale(15%)" }} />
           </div>
         ))}
       </div>
@@ -927,6 +927,7 @@ export default function App() {
   const [pendingCheckout, setPendingCheckout] = useState(false);
   const [wishlist, setWishlist] = useState(() => { const u = getCurrentCustomer(); return u ? getWishlist(u.id) : []; });
   const [recentlyViewed, setRecentlyViewed] = useState(() => getRecentlyViewed());
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const allCategories = [
     ...categories
@@ -1073,15 +1074,42 @@ export default function App() {
         @keyframes brandScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-25%); } }
         .cat-card:hover .cat-card-img { transform: scale(1.07); }
         .cat-card:hover { transform: translateY(-4px) !important; box-shadow: 0 8px 0 var(--cat-accent, #ccc), 0 12px 28px rgba(0,0,0,0.22) !important; }
-        @media (max-width: 700px) { .nav-links { display: none !important; } }
-        @media (max-width: 520px) {
+        .mobile-hamburger { display: none; }
+        .nav-cart-text { display: inline; }
+        @media (max-width: 900px) {
+          .nav-links { display: none !important; }
           .nav-lang { display: none !important; }
+          .nav-search { display: none !important; }
+          .mobile-hamburger { display: flex !important; }
           .nav-root { padding: 0 1rem !important; }
-          .home-grid { grid-template-columns: 1fr !important; }
+          .nav-cart-text { display: none !important; }
           .sidebar-col { display: none !important; }
-          .product-main { grid-template-columns: 1fr !important; }
+          .home-grid { grid-template-columns: 1fr !important; }
+          .cat-grid { display: flex !important; overflow-x: auto !important; scrollbar-width: none !important; padding-bottom: 8px !important; }
+          .cat-grid-item { min-width: 140px !important; max-width: 140px !important; flex-shrink: 0 !important; height: 130px !important; }
+          .promo-slider { min-height: 280px !important; position: relative !important; flex-direction: row !important; }
+          .promo-right { display: block !important; position: absolute !important; inset: 0 !important; width: 100% !important; flex: unset !important; }
+          .promo-left { position: absolute !important; inset: 0 !important; width: 100% !important; padding: 1.25rem 1rem !important; background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 55%, transparent 100%) !important; justify-content: flex-end !important; z-index: 2 !important; }
+          .promo-title { font-size: 16px !important; margin-bottom: 6px !important; }
+          .promo-price { font-size: 22px !important; }
+          .promo-desc { display: none !important; }
+          .prod-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+          .cat-slider { margin: 0 0.75rem 1.25rem !important; }
+          .cart-drawer { width: 100% !important; max-width: 100% !important; }
+          .product-main { flex-direction: column !important; }
+          .product-sidebar { display: none !important; }
+          .footer-bottom { flex-direction: column !important; text-align: center !important; gap: 6px !important; }
+          .hoegert-banner { padding: 1.25rem 1rem !important; }
+          .catalog-pad { padding: 1rem !important; }
+          .filter-row { gap: 8px !important; }
+          .subcat-strip { gap: 6px !important; }
+          .subcat-item { min-width: 70px !important; padding: 8px 8px !important; }
+          .subcat-img { width: 40px !important; height: 40px !important; }
+          .contact-wrap { flex-direction: column !important; }
         }
-        @media (max-width: 480px) { .promo-img-col { display: none !important; } }
+        @media (max-width: 520px) {
+          .prod-card { min-width: 0 !important; }
+        }
       `}</style>
 
       {notification && (
@@ -1110,7 +1138,7 @@ export default function App() {
 
       {cartOpen && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 150 }} onClick={() => setCartOpen(false)} />}
       {cartOpen && (
-        <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 340, background: "#fff", zIndex: 200, display: "flex", flexDirection: "column", padding: "1.5rem" }}>
+        <div className="cart-drawer" style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 340, background: "#fff", zIndex: 200, display: "flex", flexDirection: "column", padding: "1.5rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
             <span style={{ fontSize: 18, fontWeight: 700, color: "#1a1a1a" }}>{t.cart} {cartCount > 0 && <span style={{ background: "#E65C00", color: "#fff", borderRadius: "50%", width: 22, height: 22, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, marginLeft: 6 }}>{cartCount}</span>}</span>
             <button onClick={() => setCartOpen(false)} style={{ background: "#f0f0f0", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 18, cursor: "pointer", color: "#555" }}>×</button>
@@ -1123,7 +1151,7 @@ export default function App() {
                 return (
                   <div key={item.id} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: "1px solid #f0f0f0", alignItems: "center" }}>
                     <div style={{ width: 52, height: 52, borderRadius: 9, overflow: "hidden", flexShrink: 0, background: cat ? cat.bg : "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {getProductImg(item) ? <img src={getProductImg(item)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : <span style={{ fontSize: 24 }}>{cat ? cat.icon : "📦"}</span>}
+                      {getProductImg(item) ? <img src={getProductImg(item)} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : <span style={{ fontSize: 24 }}>{cat ? cat.icon : "📦"}</span>}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 500, color: "#1a1a1a", lineHeight: 1.3 }}>{lang === "en" ? (item.en || item.name) : item.name}</div>
@@ -1151,7 +1179,56 @@ export default function App() {
         </div>
       )}
 
+      {/* Mobile menu drawer */}
+      {mobileMenuOpen && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 300 }} onClick={() => setMobileMenuOpen(false)} />}
+      {mobileMenuOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 280, background: "#1a1a1a", zIndex: 350, display: "flex", flexDirection: "column", padding: "1.5rem 1.25rem", overflowY: "auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <MGPLogo />
+              <span style={{ color: "#fff", fontWeight: 800, fontSize: 15 }}>{t.storeName}</span>
+            </div>
+            <button onClick={() => setMobileMenuOpen(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", width: 34, height: 34, borderRadius: 8, fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+          </div>
+          {[["home", t.home, "🏠"], ["catalog", t.catalog, "📦"], ["contact", t.contact, "📞"]].map(([pg, label, icon]) => (
+            <div key={pg} onClick={() => { setMobileMenuOpen(false); if (pg === "home") goHome(); else { window.history.pushState({ page: pg }, "", "/" + pg); setPage(pg); setSelectedProduct(null); window.scrollTo(0, 0); } }}
+              style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 12px", borderRadius: 10, cursor: "pointer", marginBottom: 4, background: navActivePage === pg ? "rgba(230,92,0,0.2)" : "transparent", borderLeft: navActivePage === pg ? "3px solid #E65C00" : "3px solid transparent" }}>
+              <span style={{ fontSize: 18 }}>{icon}</span>
+              <span style={{ color: "#fff", fontWeight: navActivePage === pg ? 700 : 400, fontSize: 15 }}>{label}</span>
+            </div>
+          ))}
+          <div style={{ height: 1, background: "#333", margin: "1rem 0" }} />
+          <div style={{ fontSize: 11, color: "#E65C00", fontWeight: 700, letterSpacing: 1.5, marginBottom: 10 }}>LANGUAGE</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {["ka", "en", "ru"].map(l => (
+              <button key={l} onClick={() => { setLang(l); setMobileMenuOpen(false); }}
+                style={{ background: lang === l ? "#E65C00" : "rgba(255,255,255,0.1)", border: "none", color: "#fff", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", fontWeight: lang === l ? 700 : 400 }}>{l.toUpperCase()}</button>
+            ))}
+          </div>
+          <div style={{ marginTop: "auto", paddingTop: "1.5rem" }}>
+            {currentUser ? (
+              <div onClick={() => { setPage("profile"); setMobileMenuOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px", background: "rgba(255,255,255,0.08)", borderRadius: 10, cursor: "pointer" }}>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#E65C00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>{currentUser.firstName[0].toUpperCase()}</div>
+                <span style={{ color: "#fff", fontWeight: 600 }}>{currentUser.firstName}</span>
+              </div>
+            ) : (
+              <button onClick={() => { setAuthOpen(true); setMobileMenuOpen(false); }} style={{ width: "100%", background: "#E65C00", border: "none", color: "#fff", borderRadius: 10, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                {lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <nav className="nav-root" style={{ background: "#E65C00", padding: "0 2rem", display: "flex", alignItems: "center", height: 62, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 12px rgba(0,0,0,0.18)", gap: 16 }}>
+        {/* Hamburger — mobile only */}
+        <button className="mobile-hamburger" onClick={() => setMobileMenuOpen(true)}
+          style={{ background: "rgba(255,255,255,0.12)", border: "none", color: "#fff", width: 38, height: 38, borderRadius: 9, cursor: "pointer", flexShrink: 0, flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, padding: 0 }}>
+          <span style={{ display: "block", width: 18, height: 2, background: "#fff", borderRadius: 2 }} />
+          <span style={{ display: "block", width: 18, height: 2, background: "#fff", borderRadius: 2 }} />
+          <span style={{ display: "block", width: 18, height: 2, background: "#fff", borderRadius: 2 }} />
+        </button>
+
         <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", flexShrink: 0 }} onClick={goHome}>
           <MGPLogo />
           <div>
@@ -1167,7 +1244,7 @@ export default function App() {
         </div>
 
         {/* Search bar */}
-        <form ref={searchRef} style={{ flex: 1, maxWidth: 440, display: "flex", alignItems: "center", background: "#fff", borderRadius: 9, overflow: "visible", position: "relative", boxShadow: "0 1px 4px rgba(0,0,0,0.12)" }}
+        <form ref={searchRef} className="nav-search" style={{ flex: 1, maxWidth: 440, display: "flex", alignItems: "center", background: "#fff", borderRadius: 9, overflow: "visible", position: "relative", boxShadow: "0 1px 4px rgba(0,0,0,0.12)" }}
           onSubmit={e => { e.preventDefault(); if (search.trim()) { setSearchOpen(false); setPage("catalog"); setSelectedProduct(null); window.scrollTo(0, 0); } }}>
           <input
             value={search}
@@ -1192,16 +1269,16 @@ export default function App() {
               <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#E65C00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
                 {currentUser.firstName[0].toUpperCase()}
               </div>
-              <span style={{ fontSize: 12, color: "#fff", fontWeight: 600, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser.firstName}</span>
+              <span className="nav-cart-text" style={{ fontSize: 12, color: "#fff", fontWeight: 600, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser.firstName}</span>
             </div>
           ) : (
-            <button onClick={() => setAuthOpen(true)} style={{ background: "rgba(255,255,255,0.12)", border: "1.5px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 9, padding: "6px 13px", fontSize: 12, fontWeight: 600, cursor: "pointer", marginLeft: 4 }}>
+            <button onClick={() => setAuthOpen(true)} className="nav-lang" style={{ background: "rgba(255,255,255,0.12)", border: "1.5px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 9, padding: "6px 13px", fontSize: 12, fontWeight: 600, cursor: "pointer", marginLeft: 4 }}>
               {lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In"}
             </button>
           )}
           <button onClick={() => setCartOpen(true)} style={{ background: "#fff", border: "none", color: "#E65C00", borderRadius: 9, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E65C00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
-            {t.cart}
+            <span className="nav-cart-text">{t.cart}</span>
             {cartCount > 0 && <span style={{ background: "#E65C00", color: "#fff", borderRadius: "50%", width: 20, height: 20, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>{cartCount}</span>}
           </button>
         </div>
@@ -1229,7 +1306,7 @@ export default function App() {
                   onMouseEnter={e => e.currentTarget.style.background = "#FFF8F5"}
                   onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
                   <div style={{ width: 46, height: 46, borderRadius: 8, flexShrink: 0, background: cat ? cat.bg : "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                    {img ? <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+                    {img ? <img src={img} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
                          : <span style={{ fontSize: 22 }}>{cat ? cat.icon : "📦"}</span>}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -1309,7 +1386,7 @@ export default function App() {
                       onMouseLeave={e => { e.currentTarget.style.background = "#fafafa"; e.currentTarget.style.borderColor = "#f0f0f0"; }}>
                       <div style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         {sub.img
-                          ? <img src={sub.img} alt={sub.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+                          ? <img src={sub.img} alt={sub.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
                           : <span style={{ fontSize: 26 }}>{sub.icon || "📦"}</span>}
                       </div>
                       <span style={{ fontSize: 10, fontWeight: 600, color: "#333", textAlign: "center", lineHeight: 1.3, wordBreak: "break-word" }}>
@@ -1325,12 +1402,12 @@ export default function App() {
           {/* Large image category cards — m2m.ge style */}
           <div style={{ padding: "1.25rem 1.5rem", background: "#f4f4f4", overflowX: "hidden" }}>
             <div style={{ fontSize: 10, color: "#888", fontWeight: 700, letterSpacing: 1.5, marginBottom: "1rem" }}>{t.featured.toUpperCase()}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
+            <div className="cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
               {allCategories.map(cat => {
                 const catLabel = lang === "en" ? cat.en : lang === "ru" ? (cat.ru || cat.en) : cat.name;
                 return (
                   <div key={cat.name} onClick={() => goSeeAll(cat.name)}
-                    className="cat-card"
+                    className="cat-card cat-grid-item"
                     style={{
                       position: "relative", borderRadius: 12, overflow: "hidden", cursor: "pointer", height: 166,
                       background: cat.bg || "#2a2a2a",
@@ -1340,7 +1417,7 @@ export default function App() {
                       transition: "transform 0.18s, box-shadow 0.18s",
                     }}>
                     {cat.img
-                      ? <img src={cat.img} alt={cat.en} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.35s" }} className="cat-card-img" onError={e => { e.target.style.display = "none"; }} />
+                      ? <img src={cat.img} alt={cat.en} loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.35s" }} className="cat-card-img" onError={e => { e.target.style.display = "none"; }} />
                       : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, background: cat.bg || "#f0f0f0" }}>{cat.icon || "📦"}</div>}
                     {/* Top-left accent stripe */}
                     <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: cat.color || "#E65C00", opacity: 0.85 }} />
@@ -1390,7 +1467,7 @@ export default function App() {
         <div>
           {/* HOEGERT brand banner */}
           {selectedCat === HOEGERT_CAT && (
-            <div style={{ background: "linear-gradient(135deg, #0a2a4a 0%, #0066B3 60%, #0088cc 100%)", padding: "2rem 2.5rem", display: "flex", alignItems: "center", gap: 28, position: "relative", overflow: "hidden" }}>
+            <div className="hoegert-banner" style={{ background: "linear-gradient(135deg, #0a2a4a 0%, #0066B3 60%, #0088cc 100%)", padding: "2rem 2.5rem", display: "flex", alignItems: "center", gap: 28, position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", inset: 0, opacity: 0.06, backgroundImage: "repeating-linear-gradient(45deg, #fff 0px, #fff 1px, transparent 1px, transparent 12px)", backgroundSize: "16px 16px" }} />
               <img src="/hoger.png" alt="HOEGERT" style={{ height: 64, objectFit: "contain", flexShrink: 0, position: "relative", zIndex: 1, filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.3))", background: "rgba(255,255,255,0.92)", borderRadius: 10, padding: "6px 14px" }} />
               <div style={{ position: "relative", zIndex: 1 }}>
@@ -1404,7 +1481,7 @@ export default function App() {
               </div>
             </div>
           )}
-          <div style={{ padding: "1.5rem 2rem" }}>
+          <div className="catalog-pad" style={{ padding: "1.5rem 2rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1.25rem" }}>
             <button onClick={goHome} style={{ background: "#fff", border: "1.5px solid #ddd", borderRadius: 8, padding: "6px 14px", fontSize: 13, cursor: "pointer", color: "#555", fontWeight: 600, flexShrink: 0 }}>{t.back}</button>
             <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: "#1a1a1a" }}>{catalogTitle}</h2>
@@ -1454,7 +1531,7 @@ export default function App() {
             const catSubs = subcategories.filter(s => s.parentName === selectedCat);
             if (!catSubs.length) return null;
             return (
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: "1.25rem", alignItems: "stretch" }}>
+              <div className="subcat-strip" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: "1.25rem", alignItems: "stretch" }}>
                 <div onClick={() => setSelectedSubcat(null)}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "10px 14px", borderRadius: 10, cursor: "pointer", minWidth: 90, border: `2px solid ${!selectedSubcat ? "#E65C00" : "#e8e8e8"}`, background: !selectedSubcat ? "#FFF0E6" : "#fff", transition: "all 0.15s" }}>
                   <div style={{ width: 52, height: 52, borderRadius: 8, background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>
@@ -1469,7 +1546,7 @@ export default function App() {
                     style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "10px 14px", borderRadius: 10, cursor: "pointer", minWidth: 90, maxWidth: 120, border: `2px solid ${selectedSubcat === sub.id ? "#E65C00" : "#e8e8e8"}`, background: selectedSubcat === sub.id ? "#FFF0E6" : "#fff", transition: "all 0.15s" }}>
                     <div style={{ width: 52, height: 52, borderRadius: 8, overflow: "hidden", background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {sub.img
-                        ? <img src={sub.img} alt={sub.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+                        ? <img src={sub.img} alt={sub.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
                         : <span style={{ fontSize: 24 }}>{sub.icon || "📦"}</span>}
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 600, color: selectedSubcat === sub.id ? "#E65C00" : "#555", textAlign: "center", lineHeight: 1.3 }}>
@@ -1480,7 +1557,7 @@ export default function App() {
               </div>
             );
           })()}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: 16 }}>
+          <div className="prod-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: 16 }}>
             {filtered.map(p => <ProductCard key={p.id} p={p} t={t} onAdd={addToCart} onView={goToProduct} lang={lang} cats={allCategories} wishlist={wishlist} onToggleWishlist={toggleWishlist} />)}
           </div>
           {filtered.length === 0 && <p style={{ textAlign: "center", color: "#999", marginTop: 50 }}>No products found.</p>}
@@ -1495,7 +1572,7 @@ export default function App() {
       {page === "contact" && (
         <div style={{ padding: "2.5rem 2rem" }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 1.5rem", color: "#1a1a1a" }}>{t.contactTitle}</h2>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "stretch" }}>
+          <div className="contact-wrap" style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "stretch" }}>
             {/* Left: contact info */}
             <div style={{ background: "#fff", border: "1.5px solid #e8e8e8", borderRadius: 16, padding: "2rem", flex: "1 1 300px", minWidth: 280, maxWidth: 440 }}>
               <p style={{ color: "#666", fontSize: 14, marginBottom: "1.5rem", lineHeight: 1.65 }}>{t.contactInfo}</p>
@@ -1573,7 +1650,7 @@ export default function App() {
             </div>
           </div>
           <div style={{ height: 1, background: "#222", marginBottom: "1.25rem" }} />
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, fontSize: 12 }}>
+          <div className="footer-bottom" style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, fontSize: 12 }}>
             <div>© 2025 Master Group (MGP) · All rights reserved</div>
             <div>📍 {t.address} · 📞 {t.phone} · ✉️ {t.email}</div>
           </div>
