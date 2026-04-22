@@ -38,6 +38,7 @@ function productToRow(p) {
 }
 
 export async function fetchProductsFromDB() {
+  if (!supabase) return null;
   try {
     const { data, error } = await supabase.from('products').select('*').order('id');
     if (error) return null;
@@ -46,6 +47,7 @@ export async function fetchProductsFromDB() {
 }
 
 export async function saveProductsToDB(prods) {
+  if (!supabase) return false;
   try {
     const { error } = await supabase.from('products').upsert(prods.map(productToRow), { onConflict: 'id' });
     return !error;
@@ -53,6 +55,7 @@ export async function saveProductsToDB(prods) {
 }
 
 export async function fetchOrdersFromDB() {
+  if (!supabase) return null;
   try {
     const { data, error } = await supabase.from('orders').select('*').order('date', { ascending: false });
     if (error) return null;
@@ -330,7 +333,7 @@ export function saveOrder(order) {
     orders.unshift({ ...order, status: order.status || "pending" });
     localStorage.setItem('mgp_orders', JSON.stringify(orders.slice(0, 1000)));
   } catch {}
-  supabase.from('orders').insert({
+  if (supabase) supabase.from('orders').insert({
     order_number: order.orderNumber,
     customer_id: order.customerId || null,
     customer_name: order.customerName || null,
@@ -354,7 +357,7 @@ export function updateOrderStatus(orderNumber, status) {
         : o
     );
     localStorage.setItem('mgp_orders', JSON.stringify(updated));
-    supabase.from('orders').select('status_history').eq('order_number', orderNumber).single()
+    if (supabase) supabase.from('orders').select('status_history').eq('order_number', orderNumber).single()
       .then(({ data }) => {
         const history = [...(data?.status_history || []), { status, ts: new Date().toISOString() }];
         return supabase.from('orders').update({ status, status_history: history }).eq('order_number', orderNumber);
