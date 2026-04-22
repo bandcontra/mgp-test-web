@@ -332,7 +332,7 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
       </div>
 
       {/* Main product content */}
-      <div style={{ flex: 1, padding: "1.5rem 2rem", minWidth: 0 }}>
+      <div className="product-wrap" style={{ flex: 1, padding: "1.5rem 2rem", minWidth: 0 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "1.5rem", fontSize: 13, flexWrap: "wrap" }}>
         <span onClick={onBack} style={{ cursor: "pointer", color: "#E65C00", fontWeight: 600 }}>{t.back}</span>
         <span style={{ color: "#ccc" }}>›</span>
@@ -462,7 +462,7 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
       {related.length > 0 && (
         <div style={{ marginTop: "1rem" }}>
           <h3 style={{ fontSize: 17, fontWeight: 700, color: "#1a1a1a", marginBottom: "1rem", paddingBottom: 8, borderBottom: "2px solid #f0f0f0" }}>{t.related}</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: 16 }}>
+          <div className="related-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: 16 }}>
             {related.map(r => <ProductCard key={r.id} p={r} t={t} onAdd={onAdd} onView={onView} lang={lang} wishlist={wishlist} onToggleWishlist={onToggleWishlist} />)}
           </div>
         </div>
@@ -1076,6 +1076,7 @@ export default function App() {
         .cat-card:hover { transform: translateY(-4px) !important; box-shadow: 0 8px 0 var(--cat-accent, #ccc), 0 12px 28px rgba(0,0,0,0.22) !important; }
         .mobile-hamburger { display: none; }
         .nav-cart-text { display: inline; }
+        .mobile-search-btn { display: none; }
         @media (max-width: 900px) {
           .nav-links { display: none !important; }
           .nav-lang { display: none !important; }
@@ -1096,8 +1097,11 @@ export default function App() {
           .prod-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
           .cat-slider { margin: 0 0.75rem 1.25rem !important; }
           .cart-drawer { width: 100% !important; max-width: 100% !important; }
-          .product-main { flex-direction: column !important; }
+          .product-main { grid-template-columns: 1fr !important; gap: 1rem !important; padding: 1rem !important; }
           .product-sidebar { display: none !important; }
+          .product-wrap { padding: 1rem !important; }
+          .related-grid { display: flex !important; overflow-x: auto !important; scrollbar-width: none !important; gap: 12px !important; padding-bottom: 4px !important; }
+          .mobile-search-btn { display: flex !important; }
           .footer-bottom { flex-direction: column !important; text-align: center !important; gap: 6px !important; }
           .hoegert-banner { padding: 1.25rem 1rem !important; }
           .catalog-pad { padding: 1rem !important; }
@@ -1264,20 +1268,28 @@ export default function App() {
               <button key={l} style={{ background: lang === l ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.14)", border: "1.5px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 6, padding: "4px 9px", fontSize: 11, cursor: "pointer", fontWeight: lang === l ? 700 : 400 }} onClick={() => setLang(l)}>{l.toUpperCase()}</button>
             ))}
           </div>
+          {/* Mobile search icon */}
+          <button className="mobile-search-btn" onClick={() => { setPage("catalog"); setSelectedProduct && setSelectedProduct(null); window.scrollTo(0,0); }}
+            style={{ background: "rgba(255,255,255,0.12)", border: "none", color: "#fff", width: 38, height: 38, borderRadius: 9, cursor: "pointer", alignItems: "center", justifyContent: "center" }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
           {currentUser ? (
             <div onClick={() => setPage("profile")} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.12)", borderRadius: 9, padding: "5px 11px", marginLeft: 4, cursor: "pointer" }}>
-              <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#E65C00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+              <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#E65C00", flexShrink: 0 }}>
                 {currentUser.firstName[0].toUpperCase()}
               </div>
               <span className="nav-cart-text" style={{ fontSize: 12, color: "#fff", fontWeight: 600, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser.firstName}</span>
             </div>
           ) : (
-            <button onClick={() => setAuthOpen(true)} className="nav-lang" style={{ background: "rgba(255,255,255,0.12)", border: "1.5px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 9, padding: "6px 13px", fontSize: 12, fontWeight: 600, cursor: "pointer", marginLeft: 4 }}>
-              {lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In"}
+            <button onClick={() => setAuthOpen(true)} style={{ background: "rgba(255,255,255,0.12)", border: "1.5px solid rgba(255,255,255,0.25)", color: "#fff", borderRadius: 9, padding: "6px 13px", fontSize: 12, fontWeight: 600, cursor: "pointer", marginLeft: 4 }}>
+              <span className="nav-cart-text">{lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In"}</span>
+              <span className="mobile-search-btn" style={{ alignItems: "center", justifyContent: "center", width: 18, height: 18 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
             </button>
           )}
           <button onClick={() => setCartOpen(true)} style={{ background: "#fff", border: "none", color: "#E65C00", borderRadius: 9, padding: "7px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E65C00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E65C00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             <span className="nav-cart-text">{t.cart}</span>
             {cartCount > 0 && <span style={{ background: "#E65C00", color: "#fff", borderRadius: "50%", width: 20, height: 20, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800 }}>{cartCount}</span>}
           </button>
