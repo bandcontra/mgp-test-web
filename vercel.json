@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd my-app && npm install && CI=false npm run build",
-  "outputDirectory": "my-app/build",
-  "installCommand": "echo skip"
+  "rootDirectory": "my-app",
+  "buildCommand": "CI=false npm run build",
+  "outputDirectory": "build"
 }
