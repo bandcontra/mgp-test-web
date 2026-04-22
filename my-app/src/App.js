@@ -1450,7 +1450,7 @@ export default function App() {
               const recentProds = recentlyViewed.map(id => products.find(p => p.id === id)).filter(Boolean);
               if (!recentProds.length) return null;
               return (
-                <div style={{ margin: "0 2rem 2rem", background: "#fff", borderRadius: 16, border: "1.5px solid #ebebeb", boxShadow: "0 2px 16px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                <div className="cat-slider" style={{ margin: "0 2rem 2rem", background: "#fff", borderRadius: 16, border: "1.5px solid #ebebeb", boxShadow: "0 2px 16px rgba(0,0,0,0.06)", overflow: "hidden" }}>
                   <div style={{ height: 4, background: "linear-gradient(90deg, #1a1a1a 0%, #555 100%)" }} />
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.25rem 0.75rem" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
