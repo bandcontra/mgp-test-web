@@ -1031,8 +1031,14 @@ export default function App() {
     fetchProductsFromDB().then(dbProds => {
       if (!dbProds) return;
       if (dbProds.length === 0) { saveProductsToDB(defaultProducts); return; }
-      setProducts(dbProds);
-      localStorage.setItem('mgp_products', JSON.stringify(dbProds));
+      // Preserve packSize from localStorage for products where Supabase doesn't have it yet
+      const localMap = new Map(getStoredProducts().map(p => [p.id, p]));
+      const merged = dbProds.map(p => {
+        const local = localMap.get(p.id);
+        return (local && local.packSize && !p.packSize) ? { ...p, packSize: local.packSize } : p;
+      });
+      setProducts(merged);
+      localStorage.setItem('mgp_products', JSON.stringify(merged));
     });
   }, []);
 

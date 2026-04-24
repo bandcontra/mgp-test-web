@@ -81,9 +81,15 @@ export async function saveProductsToDB(prods) {
       const uploaded = await Promise.all(p.images.map((src, i) => uploadImageToStorage(src, p.id, i)));
       return { ...p, images: uploaded };
     }));
-    const { error } = await supabase.from('products').upsert(processed.map(productToRow), { onConflict: 'id' });
+    const rows = processed.map(productToRow);
+    let { error } = await supabase.from('products').upsert(rows, { onConflict: 'id' });
+    if (error) {
+      // Retry without pack_size in case the column doesn't exist in DB yet
+      const rowsCompat = rows.map(({ pack_size, ...rest }) => rest);
+      const result = await supabase.from('products').upsert(rowsCompat, { onConflict: 'id' });
+      error = result.error;
+    }
     if (!error) {
-      // Update localStorage with storage URLs so data: blobs aren't re-uploaded on next save
       localStorage.setItem('mgp_products', JSON.stringify(processed));
     }
     return !error;
