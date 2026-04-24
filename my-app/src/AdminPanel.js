@@ -1726,7 +1726,7 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
-  const [tab, setTab] = useState("products");
+  const [tab, setTab] = useState(() => localStorage.getItem("adminTab") || "products");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -1834,7 +1834,7 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
     <div style={{ minHeight: "65vh", background: "#f8f8f8" }}>
       <div style={{ background: "#fff", borderBottom: "1.5px solid #eee", padding: "0 2rem", display: "flex", gap: 0, overflowX: "auto", alignItems: "center" }}>
         {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
+          <button key={t.id} onClick={() => { setTab(t.id); localStorage.setItem("adminTab", t.id); }}
             style={{ padding: "13px 18px", border: "none", background: "none", cursor: "pointer", fontSize: 13, fontWeight: tab === t.id ? 700 : 400, color: tab === t.id ? "#E65C00" : "#666", borderBottom: tab === t.id ? "2px solid #E65C00" : "2px solid transparent", whiteSpace: "nowrap", flexShrink: 0 }}>
             {t.label}
           </button>

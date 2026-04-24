@@ -931,13 +931,26 @@ export default function App() {
   const [lang, setLang] = useState("ka");
   const [page, setPage] = useState(() => {
     const path = window.location.pathname;
-    return path === "/admin" || path.startsWith("/admin/") ? "admin" : "home";
+    if (path === "/admin" || path.startsWith("/admin/")) return "admin";
+    const state = window.history.state;
+    if (state && state.page) return state.page;
+    if (path === "/catalog") return "catalog";
+    if (path.startsWith("/product/")) return "product";
+    if (path === "/contact") return "contact";
+    if (path === "/profile") return "profile";
+    return "home";
   });
   const [prevPage, setPrevPage] = useState("home");
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(() => {
+    const state = window.history.state;
+    return (state && state.product) ? state.product : null;
+  });
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedCat, setSelectedCat] = useState("all");
+  const [selectedCat, setSelectedCat] = useState(() => {
+    const state = window.history.state;
+    return (state && state.cat) ? state.cat : "all";
+  });
   const [sort, setSort] = useState("default");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
@@ -951,7 +964,10 @@ export default function App() {
   const [headerBanners, setHeaderBanners] = useState(() => getHeaderBanners());
   const [customCategories, setCustomCategories] = useState(() => getCustomCategories());
   const [subcategories, setSubcategories] = useState(() => getSubcategories());
-  const [selectedSubcat, setSelectedSubcat] = useState(null);
+  const [selectedSubcat, setSelectedSubcat] = useState(() => {
+    const state = window.history.state;
+    return (state && state.subcat) ? state.subcat : null;
+  });
   const [brandLogos, setBrandLogos] = useState(() => getBrandLogos());
   const [catOverrides, setCatOverrides] = useState(() => getCategoryOverrides());
   const [hoveredCat, setHoveredCat] = useState(null);
