@@ -41,7 +41,7 @@ function productToRow(p) {
     images: p.images || [],
     img: p.img || null, cat: p.cat || null, tag: p.tag || null,
     disc: p.disc || null, subcat: p.subcat || null,
-    pack_size: p.packSize || null,
+    ...(p.packSize != null ? { pack_size: p.packSize } : {}),
   };
 }
 
