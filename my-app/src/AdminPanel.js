@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import supabase from "./supabase";
 import {
   saveProducts, logActivity, getActivity, defaultCategories,
   getSEOSettings, saveSEOSettings,
@@ -16,7 +17,6 @@ import {
   deleteProductFromDB,
 } from "./data";
 
-const ADMIN_PASS = "mgp401945222";
 
 // ─── Image resize ─────────────────────────────────────────────────────────────
 // Resolution presets per context
@@ -1719,14 +1719,32 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
   const allCategories = [...defaultCategories, ...getCustomCategories()];
   const subcategories = getSubcategories();
   const [authed, setAuthed] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [emailInput, setEmailInput] = useState("");
   const [passInput, setPassInput] = useState("");
-  const [passErr, setPassErr] = useState(false);
+  const [passErr, setPassErr] = useState("");
   const [tab, setTab] = useState("products");
 
-  const tryLogin = () => {
-    if (passInput === ADMIN_PASS) { setAuthed(true); setPassErr(false); }
-    else { setPassErr(true); setPassInput(""); }
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setAuthed(!!data.session);
+      setAuthLoading(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setAuthed(!!session);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const tryLogin = async () => {
+    setPassErr("");
+    const { error } = await supabase.auth.signInWithPassword({ email: emailInput, password: passInput });
+    if (error) { setPassErr("Incorrect email or password"); setPassInput(""); }
   };
+
+  const handleLogout = () => supabase.auth.signOut();
+
+  if (authLoading) return null;
 
   if (!authed) {
     return (
@@ -1737,10 +1755,13 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Admin Panel</h2>
             <p style={{ color: "#888", fontSize: 12, margin: "6px 0 0" }}>mgp.ge/admin</p>
           </div>
-          <input type="password" value={passInput} onChange={e => { setPassInput(e.target.value); setPassErr(false); }}
-            onKeyDown={e => e.key === "Enter" && tryLogin()} placeholder="Password" autoFocus
+          <input type="email" value={emailInput} onChange={e => { setEmailInput(e.target.value); setPassErr(""); }}
+            onKeyDown={e => e.key === "Enter" && tryLogin()} placeholder="Email" autoFocus
+            style={{ ...inp, marginBottom: 10 }} />
+          <input type="password" value={passInput} onChange={e => { setPassInput(e.target.value); setPassErr(""); }}
+            onKeyDown={e => e.key === "Enter" && tryLogin()} placeholder="Password"
             style={{ ...inp, marginBottom: passErr ? 8 : 14, border: `1.5px solid ${passErr ? "#dc2626" : "#ddd"}` }} />
-          {passErr && <p style={{ color: "#dc2626", fontSize: 12, margin: "0 0 12px" }}>Incorrect password</p>}
+          {passErr && <p style={{ color: "#dc2626", fontSize: 12, margin: "0 0 12px" }}>{passErr}</p>}
           <button onClick={tryLogin} style={{ width: "100%", background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
             Sign In
           </button>
@@ -1774,7 +1795,7 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
           </button>
         ))}
         <div style={{ flex: 1 }} />
-        <button onClick={() => setAuthed(false)} style={{ padding: "6px 14px", background: "#f5f5f5", border: "1.5px solid #e0e0e0", color: "#555", borderRadius: 7, cursor: "pointer", fontSize: 12, flexShrink: 0, marginLeft: 8 }}>
+        <button onClick={handleLogout} style={{ padding: "6px 14px", background: "#f5f5f5", border: "1.5px solid #e0e0e0", color: "#555", borderRadius: 7, cursor: "pointer", fontSize: 12, flexShrink: 0, marginLeft: 8 }}>
           Logout
         </button>
       </div>
