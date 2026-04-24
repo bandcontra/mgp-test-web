@@ -344,14 +344,14 @@ function getStoredCustomers() {
 function saveCustomers(list) { localStorage.setItem('mgp_customers', JSON.stringify(list)); }
 
 function rowToCustomer(row) {
-  return { id: row.id, firstName: row.first_name, lastName: row.last_name, email: row.email, phone: row.phone || '', address: row.address || '', password: row.password, createdAt: row.created_at };
+  return { id: row.id, firstName: row.first_name, lastName: row.last_name, email: row.email, phone: row.phone || '', address: '', password: row.password, createdAt: row.created_at };
 }
 
 export async function registerCustomer({ firstName, lastName, email, phone, address, password }) {
   if (supabase) {
     const { data: existing } = await supabase.from('customers').select('id').ilike('email', email).maybeSingle();
     if (existing) return { error: "Email already registered" };
-    const { data, error } = await supabase.from('customers').insert({ first_name: firstName, last_name: lastName, email, phone: phone || '', address: address || '', password }).select().single();
+    const { data, error } = await supabase.from('customers').insert({ first_name: firstName, last_name: lastName, email, phone: phone || '', password }).select().single();
     if (error) return { error: error.message };
     const customer = rowToCustomer(data);
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
@@ -393,7 +393,7 @@ export function logoutCustomer() { localStorage.removeItem('mgp_current_customer
 export async function updateCustomer(updated) {
   localStorage.setItem('mgp_current_customer', JSON.stringify(updated));
   if (supabase) {
-    await supabase.from('customers').update({ first_name: updated.firstName, last_name: updated.lastName, email: updated.email, phone: updated.phone || '', address: updated.address || '', password: updated.password }).eq('id', updated.id);
+    await supabase.from('customers').update({ first_name: updated.firstName, last_name: updated.lastName, email: updated.email, phone: updated.phone || '', password: updated.password }).eq('id', updated.id);
   } else {
     saveCustomers(getStoredCustomers().map(c => c.id === updated.id ? { ...c, ...updated } : c));
   }
