@@ -272,7 +272,14 @@ function PromoSlider({ t, lang, onShop, onView, products, sliderConfig }) {
         )}
       </div>
       <div className="promo-right" style={{ flex: 1, position: "relative", overflow: "hidden", background: "#111" }}>
-        {img && <img src={img} alt={name} loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.88 }} />}
+        {slides.map((s, i) => {
+          const sImg = getLargeImg(getProductImg(s));
+          return sImg ? <img key={s.id} src={sImg} alt={lang === "en" ? (s.en || s.name) : s.name}
+            loading={i === 0 ? "eager" : "lazy"}
+            fetchpriority={i === 0 ? "high" : "low"}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: i === active ? 0.88 : 0, transition: "opacity 0.5s", pointerEvents: "none" }}
+          /> : null;
+        })}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(26,26,26,0.65) 0%, transparent 45%)" }} />
       </div>
     </div>
