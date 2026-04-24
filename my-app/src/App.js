@@ -510,8 +510,8 @@ function ProfilePage({ currentUser, t, lang, onLogout, onView, onAdd, products, 
   const wishlistProducts = (wishlist || []).map(id => products.find(p => p.id === id)).filter(Boolean);
   const orders = getStoredOrders().filter(o => o.customerId === currentUser.id || o.email === currentUser.email);
 
-  const handleSave = () => {
-    updateCustomer({ ...currentUser, ...form });
+  const handleSave = async () => {
+    await updateCustomer({ ...currentUser, ...form });
     Object.assign(currentUser, form);
     setEditing(false);
   };
@@ -667,16 +667,16 @@ function AuthModal({ onClose, onAuth, lang }) {
   const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErr(""); };
   const inp2 = { width: "100%", padding: "10px 12px", border: "1.5px solid #ddd", borderRadius: 9, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit" };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (mode === "login") {
-      const res = loginCustomer(form.email, form.password);
+      const res = await loginCustomer(form.email, form.password);
       if (res.error) { setErr(res.error); return; }
       onAuth(res.customer);
     } else {
       if (!form.firstName || !form.lastName || !form.email || !form.phone || !form.password) { setErr("Please fill all required fields"); return; }
       if (form.password !== form.confirm) { setErr("Passwords do not match"); return; }
-      const res = registerCustomer(form);
+      const res = await registerCustomer(form);
       if (res.error) { setErr(res.error); return; }
       onAuth(res.customer);
     }

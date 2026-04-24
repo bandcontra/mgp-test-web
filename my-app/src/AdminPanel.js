@@ -10,7 +10,7 @@ import {
   getBrandLogos, saveBrandLogos,
   getCategoryOverrides, saveCategoryOverrides,
   getProductViews, getProductSales,
-  getStoredCustomers, saveCustomers,
+  fetchCustomersFromDB, deleteCustomer, updateCustomer,
   getStoredOrders, updateOrderStatus,
   getHomepageSliders, saveHomepageSliders,
   getSocialLinks, saveSocialLinks,
@@ -1474,26 +1474,26 @@ function AnalyticsTab({ products }) {
 
 // ─── CustomersTab ─────────────────────────────────────────────────────────────
 function CustomersTab() {
-  const [customers, setCustomers] = useState(() => getStoredCustomers());
+  const [customers, setCustomers] = useState([]);
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null);
+
+  useEffect(() => { fetchCustomersFromDB().then(setCustomers); }, []);
 
   const filtered = customers.filter(c =>
     `${c.firstName} ${c.lastName} ${c.email} ${c.phone}`.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleSave = () => {
-    const next = customers.map(c => c.id === editing.id ? editing : c);
-    saveCustomers(next);
-    setCustomers(next);
+  const handleSave = async () => {
+    await updateCustomer(editing);
+    setCustomers(prev => prev.map(c => c.id === editing.id ? editing : c));
     setEditing(null);
   };
 
-  const handleDelete = (id) => {
-    const next = customers.filter(c => c.id !== id);
-    saveCustomers(next);
-    setCustomers(next);
+  const handleDelete = async (id) => {
+    await deleteCustomer(id);
+    setCustomers(prev => prev.filter(c => c.id !== id));
     setConfirmDelete(null);
   };
 
