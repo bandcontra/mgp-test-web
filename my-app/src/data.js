@@ -189,7 +189,11 @@ export function getStoredProducts() {
   try {
     const s = localStorage.getItem('mgp_products');
     const prods = s ? JSON.parse(s) : defaultProducts;
-    return migrateOldCats(prods);
+    return migrateOldCats(prods).map(p => ({
+      ...p,
+      images: (p.images || []).map(fixStorageUrl),
+      img: fixStorageUrl(p.img) || null,
+    }));
   } catch { return defaultProducts; }
 }
 
