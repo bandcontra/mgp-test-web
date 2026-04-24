@@ -349,9 +349,9 @@ function rowToCustomer(row) {
 
 export async function registerCustomer({ firstName, lastName, email, phone, address, password }) {
   if (supabase) {
-    const { data: existing } = await supabase.from('customers').select('id').ilike('email', email).maybeSingle();
+    const { data: existing } = await supabase.from('site_customers').select('id').ilike('email', email).maybeSingle();
     if (existing) return { error: "Email already registered" };
-    const { data, error } = await supabase.from('customers').insert({ first_name: firstName, last_name: lastName, email, phone: phone || '', password }).select().single();
+    const { data, error } = await supabase.from('site_customers').insert({ first_name: firstName, last_name: lastName, email, phone: phone || '', password }).select().single();
     if (error) return { error: error.message };
     const customer = rowToCustomer(data);
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
@@ -367,7 +367,7 @@ export async function registerCustomer({ firstName, lastName, email, phone, addr
 
 export async function loginCustomer(email, password) {
   if (supabase) {
-    const { data, error } = await supabase.from('customers').select('*').ilike('email', email).eq('password', password).maybeSingle();
+    const { data, error } = await supabase.from('site_customers').select('*').ilike('email', email).eq('password', password).maybeSingle();
     if (error) return { error: error.message };
     if (!data) return { error: "Invalid email or password" };
     const customer = rowToCustomer(data);
@@ -393,7 +393,7 @@ export function logoutCustomer() { localStorage.removeItem('mgp_current_customer
 export async function updateCustomer(updated) {
   localStorage.setItem('mgp_current_customer', JSON.stringify(updated));
   if (supabase) {
-    await supabase.from('customers').update({ first_name: updated.firstName, last_name: updated.lastName, email: updated.email, phone: updated.phone || '', password: updated.password }).eq('id', updated.id);
+    await supabase.from('site_customers').update({ first_name: updated.firstName, last_name: updated.lastName, email: updated.email, phone: updated.phone || '', password: updated.password }).eq('id', updated.id);
   } else {
     saveCustomers(getStoredCustomers().map(c => c.id === updated.id ? { ...c, ...updated } : c));
   }
@@ -401,13 +401,13 @@ export async function updateCustomer(updated) {
 
 export async function fetchCustomersFromDB() {
   if (!supabase) return getStoredCustomers();
-  const { data, error } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('site_customers').select('*').order('created_at', { ascending: false });
   if (error) return getStoredCustomers();
   return data.map(rowToCustomer);
 }
 
 export async function deleteCustomer(id) {
-  if (supabase) { await supabase.from('customers').delete().eq('id', id); }
+  if (supabase) { await supabase.from('site_customers').delete().eq('id', id); }
   else { saveCustomers(getStoredCustomers().filter(c => c.id !== id)); }
 }
 
