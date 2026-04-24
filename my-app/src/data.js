@@ -31,16 +31,35 @@ function productToRow(p) {
     price: p.price || 0, old_price: p.oldPrice || null,
     stock: p.stock !== false,
     stock_qty: p.stockQty != null ? p.stockQty : null,
-    images: (p.images || []).filter(src => !src.startsWith('data:')), // skip base64 for DB
+    images: p.images || [],
     img: p.img || null, cat: p.cat || null, tag: p.tag || null,
     disc: p.disc || null, subcat: p.subcat || null,
   };
 }
 
+async function uploadImageToStorage(src, productId, index) {
+  if (!src || !src.startsWith('data:')) return src;
+  if (!supabase) return src;
+  try {
+    const mime = src.match(/data:(.*?);base64,/)[1];
+    const ext = mime.split('/')[1].replace('jpeg', 'jpg') || 'jpg';
+    const base64Data = src.split(',')[1];
+    const byteChars = atob(base64Data);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArray], { type: mime });
+    const path = `products/${productId}/${index}.${ext}`;
+    const { error } = await supabase.storage.from('product-images').upload(path, blob, { upsert: true, contentType: mime });
+    if (error) return src;
+    const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
+  } catch { return src; }
+}
+
 export async function fetchProductsFromDB() {
   if (!supabase) return null;
   try {
-    const { data, error } = await supabase.from('products').select('*').order('id');
+    const { data, error } = await supabase.from('products').select('*').order('id', { ascending: false });
     if (error) return null;
     return data.map(rowToProduct);
   } catch { return null; }
@@ -49,7 +68,12 @@ export async function fetchProductsFromDB() {
 export async function saveProductsToDB(prods) {
   if (!supabase) return false;
   try {
-    const { error } = await supabase.from('products').upsert(prods.map(productToRow), { onConflict: 'id' });
+    const processed = await Promise.all(prods.map(async p => {
+      if (!p.images || !p.images.some(s => s && s.startsWith('data:'))) return p;
+      const uploaded = await Promise.all(p.images.map((src, i) => uploadImageToStorage(src, p.id, i)));
+      return { ...p, images: uploaded };
+    }));
+    const { error } = await supabase.from('products').upsert(processed.map(productToRow), { onConflict: 'id' });
     return !error;
   } catch { return false; }
 }

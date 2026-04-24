@@ -140,19 +140,38 @@ function ImageUploader({ images, onChange }) {
         </div>
       )}
       {images.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          {images.map((src, i) => (
-            <div key={i} style={{ position: "relative", width: 80, height: 80 }}>
-              <img src={src} alt="" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1.5px solid #eee" }} />
-              <button onClick={() => onChange(images.filter((_, idx) => idx !== i))}
-                style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: "50%", background: "#E65C00", border: "none", color: "#fff", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}>
-                ×
-              </button>
-              {i === 0 && (
-                <span style={{ position: "absolute", bottom: 2, left: 2, background: "rgba(0,0,0,0.65)", color: "#fff", fontSize: 8, padding: "1px 4px", borderRadius: 3, fontWeight: 700 }}>MAIN</span>
-              )}
-            </div>
-          ))}
+        <div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 6 }}>
+            {images.map((src, i) => (
+              <div key={i} style={{ position: "relative", width: 80, height: 80 }}>
+                <img src={src} alt=""
+                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: i === 0 ? "2.5px solid #E65C00" : "1.5px solid #eee", cursor: i !== 0 ? "pointer" : "default", transition: "border 0.15s" }}
+                  title={i !== 0 ? "Click to set as main image" : "Main image"}
+                  onClick={() => {
+                    if (i === 0) return;
+                    const rest = images.filter((_, idx) => idx !== i);
+                    onChange([src, ...rest]);
+                  }} />
+                <button
+                  onClick={(e) => { e.stopPropagation(); onChange(images.filter((_, idx) => idx !== i)); }}
+                  style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: "50%", background: "#E65C00", border: "none", color: "#fff", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", padding: 0, lineHeight: 1 }}>
+                  ×
+                </button>
+                {i === 0 ? (
+                  <span style={{ position: "absolute", bottom: 2, left: 2, background: "rgba(230,92,0,0.85)", color: "#fff", fontSize: 8, padding: "1px 4px", borderRadius: 3, fontWeight: 700 }}>MAIN</span>
+                ) : (
+                  <span
+                    onClick={(e) => { e.stopPropagation(); const rest = images.filter((_, idx) => idx !== i); onChange([src, ...rest]); }}
+                    style={{ position: "absolute", bottom: 2, left: 2, background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: 7, padding: "1px 3px", borderRadius: 3, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    SET MAIN
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          {images.length > 1 && (
+            <div style={{ fontSize: 10, color: "#999" }}>Click a photo or "SET MAIN" to make it the main image.</div>
+          )}
         </div>
       )}
     </div>
