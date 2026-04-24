@@ -278,11 +278,17 @@ function ProductModal({ prod, onSave, onClose, nextId, allCategories, subcategor
               onChange={e => set("stockQty", e.target.value === "" ? null : parseInt(e.target.value) || 0)} />
           </Field>
         </div>
-        <Field label="Pack Size — pcs per box (blank = sold individually)">
+        <Field label="Pack Size — pcs per box (blank = sold individually). Price above is per piece.">
           <input style={{ ...inp, width: "50%" }} type="number" min="1" placeholder="e.g. 300"
             value={form.packSize ?? ""}
             onChange={e => set("packSize", e.target.value === "" ? null : parseInt(e.target.value) || null)} />
         </Field>
+        {form.packSize > 0 && parseFloat(form.price) > 0 && (
+          <div style={{ marginBottom: 12, padding: "10px 14px", background: "#EFF6FF", border: "1.5px solid #BFDBFE", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 12, color: "#555" }}>Box price ({form.packSize} pcs × ₾{parseFloat(form.price) * (1 - (form.disc || 0) / 100)}):</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#1E3A5F" }}>₾{(parseFloat(form.price) * (1 - (form.disc || 0) / 100) * form.packSize).toFixed(2)}</span>
+          </div>
+        )}
         <Field label="Product Images (drag & drop or click to upload — add as many as you want)">
           {prod && prod.img && !prod.img.startsWith("data:") && (form.images || []).length === 0 && (
             <div style={{ fontSize: 11, color: "#888", marginBottom: 8, padding: "6px 10px", background: "#f8f8f8", borderRadius: 6 }}>

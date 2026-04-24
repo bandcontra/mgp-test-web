@@ -150,9 +150,13 @@ function ProductCard({ p, t, onAdd, onView, lang, cats, wishlist, onToggleWishli
         <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 4, lineHeight: 1.35 }}>{displayName}</div>
         {p.desc && <div style={{ fontSize: 11, color: "#999", marginBottom: 8, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.desc}</div>}
         <div style={{ flex: 1 }} />
-        <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
           {p.price > 0
-            ? <><span style={{ fontSize: 18, fontWeight: 800, color: "#E65C00" }}>₾{p.price.toFixed(2)}</span>{p.oldPrice && <span style={{ fontSize: 12, color: "#ccc", textDecoration: "line-through" }}>₾{p.oldPrice.toFixed(2)}</span>}</>
+            ? <>
+                <span style={{ fontSize: 18, fontWeight: 800, color: "#E65C00" }}>₾{(p.packSize ? p.price * p.packSize : p.price).toFixed(2)}</span>
+                {p.oldPrice && <span style={{ fontSize: 12, color: "#ccc", textDecoration: "line-through" }}>₾{(p.packSize ? p.oldPrice * p.packSize : p.oldPrice).toFixed(2)}</span>}
+                {p.packSize && <span style={{ fontSize: 10, color: "#aaa" }}>₾{p.price.toFixed(3)}/{t.pcs}</span>}
+              </>
             : <span style={{ fontSize: 12, color: "#aaa", fontWeight: 600 }}>კონტაქტი / Call</span>}
         </div>
         <div style={{ marginBottom: 9, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -384,10 +388,10 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
             {p.price > 0 ? (
               <>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 36, fontWeight: 800, color: "#E65C00", lineHeight: 1 }}>₾{p.price.toFixed(2)}</span>
-                  {p.oldPrice && <span style={{ fontSize: 20, color: "#bbb", textDecoration: "line-through" }}>₾{p.oldPrice.toFixed(2)}</span>}
+                  <span style={{ fontSize: 36, fontWeight: 800, color: "#E65C00", lineHeight: 1 }}>₾{(p.packSize ? p.price * p.packSize : p.price).toFixed(2)}</span>
+                  {p.oldPrice && <span style={{ fontSize: 20, color: "#bbb", textDecoration: "line-through" }}>₾{(p.packSize ? p.oldPrice * p.packSize : p.oldPrice).toFixed(2)}</span>}
                   {p.disc && <span style={{ background: "#FEE2E2", color: "#991B1B", fontSize: 12, fontWeight: 700, padding: "3px 9px", borderRadius: 6 }}>-{p.disc}% {t.off}</span>}
-                  {p.packSize && <span style={{ fontSize: 12, color: "#1E3A5F", fontWeight: 600 }}>{t.perBox} · {t.packOf} {p.packSize} {t.pcs}</span>}
+                  {p.packSize && <span style={{ fontSize: 13, color: "#888" }}>₾{p.price.toFixed(3)}/{t.pcs}</span>}
                 </div>
               </>
             ) : (
@@ -820,7 +824,7 @@ function CheckoutModal({ t, lang, cart, cartTotal, onClose, onSuccess, onTrackSa
         phone: form.phone,
         email: form.email,
         address: form.address,
-        items: cart.map(i => ({ id: i.id, name: i.name, en: i.en, qty: i.qty, price: i.price })),
+        items: cart.map(i => ({ id: i.id, name: i.name, en: i.en, qty: i.qty, price: i.packSize ? i.price * i.packSize : i.price })),
         total: parseFloat(cartTotal.toFixed(2)),
         paymentMethod: form.paymentMethod,
         date: new Date().toISOString(),
@@ -1123,7 +1127,7 @@ export default function App() {
     setTimeout(() => setNotification(""), 2000);
   };
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
-  const cartTotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
+  const cartTotal = cart.reduce((s, i) => s + i.qty * (i.packSize ? i.price * i.packSize : i.price), 0);
 
   const goHome = () => {
     window.history.pushState({ page: "home", cat: "all" }, "", "/");
@@ -1262,7 +1266,7 @@ export default function App() {
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 500, color: "#1a1a1a", lineHeight: 1.3 }}>{lang === "en" ? (item.en || item.name) : item.name}</div>
-                      <div style={{ fontSize: 12, color: "#E65C00", fontWeight: 700, marginTop: 3 }}>{item.price > 0 ? `₾${(item.qty * item.price).toFixed(2)}` : "—"}</div>
+                      <div style={{ fontSize: 12, color: "#E65C00", fontWeight: 700, marginTop: 3 }}>{item.price > 0 ? `₾${(item.qty * (item.packSize ? item.price * item.packSize : item.price)).toFixed(2)}` : "—"}</div>
                       {item.packSize && <div style={{ fontSize: 10, color: "#888", marginTop: 1 }}>{item.qty * item.packSize} {t.pcs}</div>}
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
                         <button onClick={() => updateQty(item.id, -1)} style={{ width: 24, height: 24, border: "1px solid #ddd", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: 14 }}>−</button>
