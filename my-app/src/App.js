@@ -1230,7 +1230,7 @@ export default function App() {
   } : null;
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', sans-serif", minHeight: "100vh", background: "#F4F4F4", overflowX: "hidden" }}>
+    <div style={{ fontFamily: "'Segoe UI', sans-serif", minHeight: "100vh", background: "#F4F4F4" }}>
       <Helmet>
         <html lang={lang === "ka" ? "ka" : lang === "ru" ? "ru" : "en"} />
         <title>{seoTitle}</title>
@@ -1550,7 +1550,7 @@ export default function App() {
         );
       })()}
 
-      <main>
+      <main style={{ overflowX: "hidden" }}>
       {page === "home" && (
         <>
 
