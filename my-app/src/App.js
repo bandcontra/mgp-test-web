@@ -1032,7 +1032,7 @@ export default function App() {
       if (!dbProds) return;
       if (dbProds.length === 0) { saveProductsToDB(defaultProducts); return; }
       setProducts(dbProds);
-      saveProducts(dbProds);
+      localStorage.setItem('mgp_products', JSON.stringify(dbProds));
     });
   }, []);
 
