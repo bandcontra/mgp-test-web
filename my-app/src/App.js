@@ -1098,7 +1098,9 @@ export default function App() {
           .sidebar-col { display: none !important; }
           .home-grid { grid-template-columns: 1fr !important; }
           .cat-grid { display: flex !important; overflow-x: auto !important; scrollbar-width: none !important; padding-bottom: 8px !important; }
-          .cat-grid-item { min-width: 140px !important; max-width: 140px !important; flex-shrink: 0 !important; height: 130px !important; }
+          .cat-grid-item { min-width: 155px !important; max-width: 155px !important; flex-shrink: 0 !important; height: 145px !important; }
+          .cat-section-wrap { overflow-x: visible !important; padding: 0.75rem !important; }
+          .cat-section-wrap > div { overflow: visible !important; padding: 1rem !important; }
           .promo-slider { min-height: 280px !important; position: relative !important; flex-direction: row !important; }
           .promo-right { display: block !important; position: absolute !important; inset: 0 !important; width: 100% !important; flex: unset !important; }
           .promo-left { position: absolute !important; inset: 0 !important; width: 100% !important; padding: 1.25rem 1rem !important; background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 55%, transparent 100%) !important; justify-content: flex-end !important; z-index: 2 !important; }
@@ -1455,7 +1457,7 @@ export default function App() {
           })()}
 
           {/* Large image category cards */}
-          <div style={{ padding: "1.5rem", overflowX: "hidden" }}>
+          <div className="cat-section-wrap" style={{ padding: "1.5rem", overflowX: "hidden" }}>
             <div style={{ background: "#fff", borderRadius: 18, border: "2px solid #e8e8e8", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", padding: "1.5rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "1.25rem" }}>
                 <div style={{ width: 4, height: 24, background: "#E65C00", borderRadius: 4, flexShrink: 0 }} />
