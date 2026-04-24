@@ -80,6 +80,10 @@ export async function saveProductsToDB(prods) {
       return { ...p, images: uploaded };
     }));
     const { error } = await supabase.from('products').upsert(processed.map(productToRow), { onConflict: 'id' });
+    if (!error) {
+      // Update localStorage with storage URLs so data: blobs aren't re-uploaded on next save
+      localStorage.setItem('mgp_products', JSON.stringify(processed));
+    }
     return !error;
   } catch { return false; }
 }
