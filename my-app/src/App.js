@@ -991,8 +991,8 @@ export default function App() {
     const handler = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) setSearchOpen(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
   }, []);
 
   // Refresh admin-controlled config when leaving admin page
