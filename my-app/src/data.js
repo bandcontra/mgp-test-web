@@ -88,6 +88,14 @@ export async function saveProductsToDB(prods) {
   } catch { return false; }
 }
 
+export async function deleteProductFromDB(id) {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    return !error;
+  } catch { return false; }
+}
+
 export async function fetchOrdersFromDB() {
   if (!supabase) return null;
   try {

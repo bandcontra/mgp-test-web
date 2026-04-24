@@ -13,6 +13,7 @@ import {
   getStoredOrders, updateOrderStatus,
   getHomepageSliders, saveHomepageSliders,
   getSocialLinks, saveSocialLinks,
+  deleteProductFromDB,
 } from "./data";
 
 const ADMIN_PASS = "mgp401945222";
@@ -513,6 +514,7 @@ function ProductsTab({ products, setProducts, allCategories, subcategories }) {
     const updated = products.filter(p => p.id !== id);
     setProducts(updated);
     saveProducts(updated);
+    deleteProductFromDB(id);
     logActivity("admin", "delete_product", products.find(p => p.id === id)?.name || id);
     setDeleteConfirm(null);
   };
