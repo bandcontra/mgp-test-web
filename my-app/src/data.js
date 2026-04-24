@@ -1,8 +1,8 @@
 import supabase from './supabase';
 
 export const BASE = "https://mgp.ge/timthumb/thumb.php?src=/upload/";
-export const SZ = "&w=280&h=210&zc=1&q=100";
-export const SZ_LG = "&w=600&h=500&zc=1&q=100";
+export const SZ = "&w=280&h=210&zc=1&q=75";
+export const SZ_LG = "&w=600&h=500&zc=1&q=75";
 
 export const HOEGERT_NAME = "HOEGERT";
 export const OLD_HOGERT_CATS = ["HOGERT სახარჯი მასალები", "HOGERT GERMAN ხელსაწყოები"];

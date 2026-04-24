@@ -1415,7 +1415,7 @@ export default function App() {
         </div>
       )}
 
-      {page !== "admin" && <nav className="nav-root" style={{ background: "#E65C00", padding: "0 2rem", display: "flex", alignItems: "center", height: 62, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 12px rgba(0,0,0,0.18)", gap: 16 }}>
+      {page !== "admin" && <nav className="nav-root" style={{ background: "#E65C00", padding: "0 2rem", display: "flex", alignItems: "center", height: 62, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 12px rgba(0,0,0,0.18)", gap: 16, borderRadius: "0 0 18px 18px" }}>
         {/* Hamburger — mobile only */}
         <button className="mobile-hamburger" onClick={() => setMobileMenuOpen(true)}
           style={{ background: "rgba(255,255,255,0.12)", border: "none", color: "#fff", width: 38, height: 38, borderRadius: 9, cursor: "pointer", flexShrink: 0, flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, padding: 0 }}>

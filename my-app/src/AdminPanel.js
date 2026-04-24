@@ -1014,7 +1014,11 @@ function CategoriesTab({ onConfigChange }) {
     saveOverrides({ ...catOverrides, [catName]: { ...cur, hidden: !cur.hidden } });
   };
 
-  const allCats = [...customCats, ...defaultCategories];
+  const deleteDefaultCat = (name) => {
+    saveOverrides({ ...catOverrides, [name]: { ...(catOverrides[name] || {}), deleted: true, hidden: true } });
+  };
+
+  const allCats = [...customCats, ...defaultCategories.filter(d => !catOverrides[d.name]?.deleted)];
 
   const saveCat = () => {
     if (!newCat.name.trim() || !newCat.en.trim()) return;
@@ -1141,7 +1145,10 @@ function CategoriesTab({ onConfigChange }) {
                 <button onClick={() => setAddSubFor(addSubFor === cat.name ? null : cat.name)} style={{ padding: "4px 10px", border: "1.5px solid #ddd", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>+ Sub</button>
                 <button onClick={() => startEditCat(cat)} style={{ padding: "4px 10px", border: "1.5px solid #ddd", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>Edit</button>
                 <button onClick={() => toggleHideCat(cat.name)} style={{ padding: "4px 10px", border: `1.5px solid ${isHidden ? "#E65C00" : "#ddd"}`, borderRadius: 6, background: isHidden ? "#FFF0E6" : "#fff", color: isHidden ? "#E65C00" : "#555", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>{isHidden ? "Show" : "Hide"}</button>
-                {!isDefault && <button onClick={() => deleteCat(cat.id)} style={{ padding: "4px 10px", border: "1.5px solid #FEE2E2", borderRadius: 6, background: "#FEF2F2", color: "#dc2626", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>Delete</button>}
+                {!isDefault
+                  ? <button onClick={() => deleteCat(cat.id)} style={{ padding: "4px 10px", border: "1.5px solid #FEE2E2", borderRadius: 6, background: "#FEF2F2", color: "#dc2626", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>Delete</button>
+                  : <button onClick={() => { if (window.confirm(`Delete "${cat.en}" permanently?`)) deleteDefaultCat(cat.name); }} style={{ padding: "4px 10px", border: "1.5px solid #FEE2E2", borderRadius: 6, background: "#FEF2F2", color: "#dc2626", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>Delete</button>
+                }
               </div>
 
               {/* Inline edit form for this category */}
