@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import AdminPanel from "./AdminPanel";
 import { defaultCategories as categories, defaultProducts, HOEGERT_NAME, SZ, SZ_LG, getStoredProducts, saveProducts, fetchProductsFromDB, saveProductsToDB, getSEOSettings, getHeaderBanners, getSliderConfig, getSliderDisabled, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed, getHomepageSliders, getSocialLinks } from "./data";
 import mgpLogo from "./mgp-favicon_3.png";
@@ -122,7 +123,7 @@ function ProductCard({ p, t, onAdd, onView, lang, cats, wishlist, onToggleWishli
   const isOutOfStock = !p.stock || (p.stockQty != null && p.stockQty <= 0);
 
   return (
-    <div className="prod-card" onClick={() => onView && onView(p)}
+    <article className="prod-card" onClick={() => onView && onView(p)}
       style={{ background: "#fff", border: "1.5px solid #e8e8e8", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", minWidth: 175, maxWidth: 215, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
       {/* Colored top accent */}
       <div style={{ height: 3, background: accentColor, flexShrink: 0 }} />
@@ -173,7 +174,7 @@ function ProductCard({ p, t, onAdd, onView, lang, cats, wishlist, onToggleWishli
           {t.addToCart}
         </button>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -194,7 +195,7 @@ function CategorySlider({ cat, allProducts, t, onAdd, onSeeAll, onView, lang, ca
           <div style={{ width: 42, height: 42, borderRadius: 10, background: cat.bg || "#f5f5f5", border: `1.5px solid ${accent}33`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
             {cat.icon
               ? cat.icon
-              : <img src="/hoger.png" alt="" style={{ height: 20, objectFit: "contain" }} />}
+              : <img src="/hoger.png" alt="HOEGERT" style={{ height: 20, objectFit: "contain" }} />}
           </div>
           <div>
             <div style={{ fontSize: 16, fontWeight: 800, color: "#1a1a1a", letterSpacing: 0.2 }}>{catLabel}</div>
@@ -245,7 +246,7 @@ function PromoSlider({ t, lang, onShop, onView, products, sliderConfig }) {
   const name = lang === "en" ? (p.en || p.name) : p.name;
 
   return (
-    <div className="promo-slider" style={{ height: "100%", minHeight: 380, display: "flex", overflow: "hidden", position: "relative", flexShrink: 0 }}>
+    <div className="promo-slider" style={{ height: "100%", minHeight: 380, display: "flex", overflow: "hidden", position: "relative", flexShrink: 0, borderRadius: 10 }}>
       <div className="promo-left" style={{ width: "42%", background: "#1a1a1a", display: "flex", flexDirection: "column", justifyContent: "center", padding: "2.5rem 3rem", flexShrink: 0, zIndex: 1 }}>
         {p.disc && (
           <div style={{ marginBottom: 14 }}>
@@ -261,7 +262,6 @@ function PromoSlider({ t, lang, onShop, onView, products, sliderConfig }) {
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={() => onView && onView(p)} style={{ background: "#E65C00", color: "#fff", border: "none", borderRadius: 9, padding: "11px 22px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>View Product →</button>
-          <button onClick={onShop} style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.75)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: 9, padding: "11px 18px", fontSize: 13, cursor: "pointer" }}>{t.heroBtn}</button>
         </div>
         {slides.length > 1 && (
           <div style={{ display: "flex", gap: 6, marginTop: 26 }}>
@@ -313,7 +313,7 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
   return (
     <div style={{ display: "flex", minHeight: "70vh" }}>
       {/* Left category sidebar */}
-      <div className="sidebar-col product-sidebar" style={{ width: 225, flexShrink: 0, background: "#1a1a1a", padding: "0.75rem 0.625rem", overflowY: "auto", alignSelf: "stretch", border: "2px solid #E65C00", borderRadius: 10, boxShadow: "0 0 18px rgba(230,92,0,0.35)" }}>
+      <div className="sidebar-col product-sidebar" style={{ width: 225, flexShrink: 0, background: "#1a1a1a", padding: "0.75rem 0.625rem", overflowY: "auto", alignSelf: "stretch", border: "2px solid #1a1a1a", borderRadius: 10 }}>
         <div style={{ fontSize: 12, color: "#fff", fontWeight: 800, letterSpacing: 2, marginBottom: "0.75rem", padding: "7px 10px", background: "#E65C00", borderRadius: 6, textAlign: "center", textTransform: "uppercase", boxShadow: "0 2px 8px rgba(230,92,0,0.5)" }}>BROWSE PRODUCTS</div>
         {allCatsForSidebar.map(cat => {
           const catSubs = (subcategories || []).filter(s => s.parentName === cat.name);
@@ -350,7 +350,7 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ borderRadius: 12, background: cat ? cat.bg : "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 320, position: "relative", overflow: "hidden" }}>
             {displayImg && !imgErr
-              ? <img src={displayImg} alt={displayName} onError={() => setImgErr(true)} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "contain", maxHeight: 400, padding: "1.5rem" }} />
+              ? <img src={displayImg} alt={displayName} onError={() => setImgErr(true)} loading="eager" fetchpriority="high" style={{ width: "100%", height: "100%", objectFit: "contain", maxHeight: 400, padding: "1.5rem" }} />
               : (cat && cat.icon ? <span style={{ fontSize: 100 }}>{cat.icon}</span> : <span style={{ fontSize: 100 }}>📦</span>)}
             {p.disc && (
               <div style={{ position: "absolute", top: 16, right: 16, width: 60, height: 60, borderRadius: "50%", background: "#E65C00", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 12px rgba(230,92,0,0.4)" }}>
@@ -369,7 +369,7 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
               {images.map((src, i) => (
                 <div key={i} onClick={() => { setActiveImg(i); setImgErr(false); }}
                   style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 8, overflow: "hidden", cursor: "pointer", border: `2px solid ${i === activeImg ? "#E65C00" : "#e0e0e0"}`, background: cat ? cat.bg : "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <img src={src} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+                  <img src={src} alt={`${displayName} — ${lang === "ka" ? "სურათი" : lang === "ru" ? "фото" : "image"} ${i + 1}`} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
                 </div>
               ))}
             </div>
@@ -1016,9 +1016,9 @@ export default function App() {
       .map(c => ({ ...c, ...(catOverrides[c.name] || {}) })),
     ...customCategories,
   ];
-  // Used for sidebar + Shop by Category — hidden flag doesn't apply there
+  // Used for sidebar + Shop by Category — hidden flag doesn't apply there, but deleted does
   const allCategoriesNav = [
-    ...categories.map(c => ({ ...c, ...(catOverrides[c.name] || {}) })),
+    ...categories.filter(c => !catOverrides[c.name]?.deleted).map(c => ({ ...c, ...(catOverrides[c.name] || {}) })),
     ...customCategories,
   ];
   const t = translations[lang];
@@ -1169,8 +1169,81 @@ export default function App() {
   const catalogTitle = activeCat ? (lang === "en" ? activeCat.en : lang === "ru" ? activeCat.ru : activeCat.name) : t.catalog;
   const navActivePage = page === "product" ? prevPage : page;
 
+  const storeName = t.storeName || "Master Group";
+  const storeDesc = {
+    en: "Master Group — wholesale and retail store in Tbilisi. Packaging, boxes, construction and household products.",
+    ka: "მასტერ ჯგუფი — საბითუმო და საცალო მაღაზია თბილისში. შეფუთვა, ყუთები, სამშენებლო და სახლის პროდუქტები.",
+    ru: "Мастер Групп — оптово-розничный магазин в Тбилиси. Упаковка, коробки, строительные и хозяйственные товары.",
+  };
+
+  const seoTitle = (() => {
+    if (page === "product" && selectedProduct) {
+      const pname = lang === "en" && selectedProduct.en ? selectedProduct.en : selectedProduct.name;
+      return `${pname} — ${storeName}`;
+    }
+    if (page === "catalog") return `${catalogTitle} — ${storeName}`;
+    if (page === "contact") return `${lang === "en" ? "Contact" : lang === "ru" ? "Контакты" : "კონტაქტი"} — ${storeName}`;
+    return `${storeName} — ${lang === "en" ? "Wholesale Store Tbilisi" : lang === "ru" ? "Оптовый магазин Тбилиси" : "საბითუმო მაღაზია თბილისში"}`;
+  })();
+
+  const seoDesc = (() => {
+    if (page === "product" && selectedProduct) {
+      const pname = lang === "en" && selectedProduct.en ? selectedProduct.en : selectedProduct.name;
+      const price = selectedProduct.price ? `${selectedProduct.price} ₾` : "";
+      return `${pname}${price ? " — " + price : ""}. ${storeDesc[lang]}`;
+    }
+    if (page === "catalog") return `${catalogTitle} ${lang === "en" ? "products at" : lang === "ru" ? "— товары в" : "— პროდუქტები"} ${storeName}. ${storeDesc[lang]}`;
+    return storeDesc[lang];
+  })();
+
+  const productJsonLd = page === "product" && selectedProduct ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: (lang === "en" && selectedProduct.en) ? selectedProduct.en : selectedProduct.name,
+    image: selectedProduct.images?.[0] || selectedProduct.img || "",
+    description: selectedProduct.desc || seoDesc,
+    sku: String(selectedProduct.id),
+    brand: { "@type": "Brand", name: selectedProduct.brand || storeName },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "GEL",
+      price: selectedProduct.price,
+      availability: selectedProduct.stock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: storeName },
+    },
+  } : null;
+
+  const organizationJsonLd = page === "home" ? {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    name: "Master Group",
+    url: "https://mgp.ge",
+    logo: "https://mgp.ge/mgp-favicon_3.png",
+    telephone: "+995322265344",
+    email: "info@mgp.ge",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Rafael Agladze St. N15, Megaline",
+      addressLocality: "Tbilisi",
+      addressCountry: "GE",
+    },
+  } : null;
+
   return (
     <div style={{ fontFamily: "'Segoe UI', sans-serif", minHeight: "100vh", background: "#F4F4F4", overflowX: "hidden" }}>
+      <Helmet>
+        <html lang={lang === "ka" ? "ka" : lang === "ru" ? "ru" : "en"} />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDesc} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDesc} />
+        {productJsonLd && (
+          <script type="application/ld+json">{JSON.stringify(productJsonLd)}</script>
+        )}
+        {organizationJsonLd && (
+          <script type="application/ld+json">{JSON.stringify(organizationJsonLd)}</script>
+        )}
+      </Helmet>
       {page !== "admin" && <AnnouncementBar banners={headerBanners} />}
       <style>{`
         .prod-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.10); }
@@ -1262,7 +1335,7 @@ export default function App() {
                 return (
                   <div key={item.id} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: "1px solid #f0f0f0", alignItems: "center" }}>
                     <div style={{ width: 52, height: 52, borderRadius: 9, overflow: "hidden", flexShrink: 0, background: cat ? cat.bg : "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {getProductImg(item) ? <img src={getProductImg(item)} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : <span style={{ fontSize: 24 }}>{cat ? cat.icon : "📦"}</span>}
+                      {getProductImg(item) ? <img src={getProductImg(item)} alt={lang === "en" ? (item.en || item.name) : item.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : <span style={{ fontSize: 24 }}>{cat ? cat.icon : "📦"}</span>}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 500, color: "#1a1a1a", lineHeight: 1.3 }}>{lang === "en" ? (item.en || item.name) : item.name}</div>
@@ -1458,7 +1531,7 @@ export default function App() {
                   onMouseEnter={e => e.currentTarget.style.background = "#FFF8F5"}
                   onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
                   <div style={{ width: 46, height: 46, borderRadius: 8, flexShrink: 0, background: cat ? cat.bg : "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                    {img ? <img src={img} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+                    {img ? <img src={img} alt={name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
                          : <span style={{ fontSize: 22 }}>{cat ? cat.icon : "📦"}</span>}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -1477,13 +1550,14 @@ export default function App() {
         );
       })()}
 
+      <main>
       {page === "home" && (
         <>
 
           {/* Sidebar + category grid */}
           <div className="home-grid" style={{ display: "grid", gridTemplateColumns: "246px 1fr", background: "#fff", position: "relative" }}>
             {/* Dark sidebar */}
-            <div className="sidebar-col" style={{ background: "#1a1a1a", padding: "0.75rem 0.625rem", overflowY: "auto", overflowX: "hidden", height: 480, minWidth: 0, border: "2px solid #E65C00", borderRadius: 10, boxShadow: "0 0 18px rgba(230,92,0,0.35)" }}>
+            <div className="sidebar-col" style={{ background: "#1a1a1a", padding: "0.75rem 0.625rem", overflowY: "auto", overflowX: "hidden", height: 480, minWidth: 0, border: "2px solid #1a1a1a", borderRadius: 10 }}>
               <div style={{ fontSize: 12, color: "#fff", fontWeight: 800, letterSpacing: 2, marginBottom: "0.75rem", padding: "7px 10px", background: "#E65C00", borderRadius: 6, textAlign: "center", textTransform: "uppercase", boxShadow: "0 2px 8px rgba(230,92,0,0.5)", flexShrink: 0 }}>BROWSE PRODUCTS</div>
               {allCategoriesNav.map(cat => {
                 const catSubcats = subcategories.filter(s => s.parentName === cat.name);
@@ -1504,7 +1578,7 @@ export default function App() {
                       style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 10px", borderRadius: 6, cursor: "pointer", marginBottom: 5, background: isHovered ? "rgba(230,92,0,0.25)" : "rgba(255,255,255,0.04)", border: isHovered ? "1px solid rgba(230,92,0,0.5)" : "1px solid transparent", transition: "all 0.15s" }}>
                       {cat.icon
                         ? <span style={{ fontSize: 14, flexShrink: 0 }}>{cat.icon}</span>
-                        : <img src="/hoger.png" alt="" style={{ height: 13, objectFit: "contain", flexShrink: 0, filter: "brightness(0) invert(0.6)", opacity: 0.8 }} />}
+                        : <img src="/hoger.png" alt="HOEGERT" style={{ height: 13, objectFit: "contain", flexShrink: 0, filter: "brightness(0) invert(0.6)", opacity: 0.8 }} />}
                       <span style={{ fontSize: 12.5, color: isHovered ? "#fff" : "#ddd", fontWeight: isHovered ? 600 : 400, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{catLabel}</span>
                       {catSubcats.length > 0 && <span style={{ color: "#E65C00", fontSize: 12, flexShrink: 0 }}>›</span>}
                     </div>
@@ -1514,7 +1588,7 @@ export default function App() {
             </div>
 
             {/* Slider in the right column, next to the sidebar */}
-            <div style={{ minWidth: 0, overflow: "hidden", height: "100%" }}>
+            <div style={{ minWidth: 0, overflow: "hidden", height: "100%", borderRadius: 10 }}>
               {!sliderDisabled && <PromoSlider t={t} lang={lang} onShop={() => setPage("catalog")} onView={goToProduct} products={products} sliderConfig={sliderConfig} />}
             </div>
 
@@ -1812,12 +1886,13 @@ export default function App() {
       {page === "admin" && (
         <AdminPanel products={products} setProducts={setProducts} onConfigChange={refreshAdminConfig} />
       )}
+      </main>
 
       <a href="tel:+9953222654344" style={{ position: "fixed", bottom: 28, right: 24, background: "#E65C00", color: "#fff", borderRadius: "50%", width: 58, height: 58, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300, textDecoration: "none", boxShadow: "0 4px 16px rgba(230,92,0,0.45)" }}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.35 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l1.62-1.62a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
       </a>
 
-      <div style={{ background: "#111", color: "#666", padding: "2.5rem 2rem 1.5rem" }}>
+      <footer style={{ background: "#111", color: "#666", padding: "2.5rem 2rem 1.5rem" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           {/* Join Us row */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "2rem" }}>
@@ -1841,7 +1916,7 @@ export default function App() {
             <div>📍 <a href="https://maps.google.com/?q=Rafael+Agladze+St+15+Megaline+Tbilisi" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{t.address}</a> · 📞 {t.phone} · ✉️ {t.email}</div>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }
