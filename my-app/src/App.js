@@ -629,6 +629,8 @@ function AuthModal({ onClose, onAuth, lang }) {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", address: "", password: "", confirm: "" });
   const [err, setErr] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
   const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setErr(""); };
   const inp2 = { width: "100%", padding: "10px 12px", border: "1.5px solid #ddd", borderRadius: 9, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit" };
 
@@ -653,59 +655,98 @@ function AuthModal({ onClose, onAuth, lang }) {
       <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", background: "#fff", borderRadius: 18, padding: "2rem", width: "min(420px, 92vw)", zIndex: 401, maxHeight: "92vh", overflowY: "auto", boxShadow: "0 16px 48px rgba(0,0,0,0.18)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
           <h3 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: "#1a1a1a" }}>
-            {mode === "login" ? (lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In") : (lang === "ka" ? "რეგისტრაცია" : lang === "ru" ? "Регистрация" : "Create Account")}
+            {mode === "forgot" ? (lang === "ka" ? "პაროლის აღდგენა" : lang === "ru" ? "Сброс пароля" : "Reset Password") : mode === "login" ? (lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In") : (lang === "ka" ? "რეგისტრაცია" : lang === "ru" ? "Регистрация" : "Create Account")}
           </h3>
           <button onClick={onClose} style={{ background: "#f0f0f0", border: "none", borderRadius: 8, width: 32, height: 32, fontSize: 18, cursor: "pointer", color: "#555" }}>×</button>
         </div>
-        <div style={{ display: "flex", background: "#f5f5f5", borderRadius: 10, padding: 3, marginBottom: "1.5rem" }}>
-          {["login", "signup"].map(m => (
-            <button key={m} onClick={() => { setMode(m); setErr(""); }} style={{ flex: 1, padding: "8px", border: "none", borderRadius: 8, background: mode === m ? "#fff" : "transparent", cursor: "pointer", fontSize: 13, fontWeight: mode === m ? 700 : 400, color: mode === m ? "#E65C00" : "#666", boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.1)" : "none", transition: "all 0.2s" }}>
-              {m === "login" ? (lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In") : (lang === "ka" ? "რეგისტრაცია" : lang === "ru" ? "Регистрация" : "Sign Up")}
-            </button>
-          ))}
-        </div>
-        {err && <div style={{ background: "#FEF2F2", border: "1.5px solid #FEE2E2", borderRadius: 9, padding: "9px 13px", marginBottom: 14, fontSize: 13, color: "#dc2626" }}>{err}</div>}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {mode === "signup" && (
-            <>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "სახელი" : lang === "ru" ? "Имя" : "First Name"} *</label>
-                  <input required value={form.firstName} onChange={e => set("firstName", e.target.value)} style={inp2} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "გვარი" : lang === "ru" ? "Фамилия" : "Last Name"} *</label>
-                  <input required value={form.lastName} onChange={e => set("lastName", e.target.value)} style={inp2} />
-                </div>
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "ტელეფონი" : lang === "ru" ? "Телефон" : "Phone"} *</label>
-                <input required type="tel" value={form.phone} onChange={e => set("phone", e.target.value)} style={inp2} />
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "მისამართი" : lang === "ru" ? "Адрес" : "Address"}</label>
-                <input value={form.address} onChange={e => set("address", e.target.value)} style={inp2} />
-              </div>
-            </>
-          )}
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>Email *</label>
-            <input required type="email" value={form.email} onChange={e => set("email", e.target.value)} style={inp2} />
+        {mode !== "forgot" && (
+          <div style={{ display: "flex", background: "#f5f5f5", borderRadius: 10, padding: 3, marginBottom: "1.5rem" }}>
+            {["login", "signup"].map(m => (
+              <button key={m} onClick={() => { setMode(m); setErr(""); }} style={{ flex: 1, padding: "8px", border: "none", borderRadius: 8, background: mode === m ? "#fff" : "transparent", cursor: "pointer", fontSize: 13, fontWeight: mode === m ? 700 : 400, color: mode === m ? "#E65C00" : "#666", boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,0.1)" : "none", transition: "all 0.2s" }}>
+                {m === "login" ? (lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In") : (lang === "ka" ? "რეგისტრაცია" : lang === "ru" ? "Регистрация" : "Sign Up")}
+              </button>
+            ))}
           </div>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "პაროლი" : lang === "ru" ? "Пароль" : "Password"} *</label>
-            <input required type="password" value={form.password} onChange={e => set("password", e.target.value)} style={inp2} />
-          </div>
-          {mode === "signup" && (
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "გაიმეორეთ პაროლი" : lang === "ru" ? "Повторите пароль" : "Confirm Password"} *</label>
-              <input required type="password" value={form.confirm} onChange={e => set("confirm", e.target.value)} style={inp2} />
+        )}
+        {mode === "forgot" ? (
+          forgotSent ? (
+            <div style={{ textAlign: "center", padding: "1rem 0" }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>📧</div>
+              <p style={{ fontSize: 14, color: "#333", marginBottom: 8 }}>
+                {lang === "ka" ? "გთხოვთ დაგვიკავშირდეთ:" : lang === "ru" ? "Пожалуйста, свяжитесь с нами:" : "Please contact support to reset your password:"}
+              </p>
+              <a href="mailto:datajijo@gmail.com" style={{ color: "#E65C00", fontWeight: 700, fontSize: 14 }}>datajijo@gmail.com</a>
+              <button onClick={() => { setMode("login"); setForgotSent(false); setForgotEmail(""); }} style={{ display: "block", width: "100%", background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", marginTop: 20 }}>
+                {lang === "ka" ? "უკან" : lang === "ru" ? "Назад" : "Back to Sign In"}
+              </button>
             </div>
-          )}
-          <button type="submit" style={{ background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", marginTop: 4 }}>
-            {mode === "login" ? (lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In") : (lang === "ka" ? "რეგისტრაცია" : lang === "ru" ? "შექმნა" : "Create Account")}
-          </button>
-        </form>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <p style={{ fontSize: 13, color: "#666", margin: 0 }}>
+                {lang === "ka" ? "შეიყვანეთ თქვენი Email მისამართი" : lang === "ru" ? "Введите ваш Email" : "Enter your email and we'll help you regain access."}
+              </p>
+              <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="Email" autoFocus style={inp2} />
+              <button onClick={() => { if (forgotEmail) setForgotSent(true); }} style={{ background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                {lang === "ka" ? "გაგზავნა" : lang === "ru" ? "Отправить" : "Continue"}
+              </button>
+              <button onClick={() => { setMode("login"); setErr(""); }} style={{ background: "none", border: "none", color: "#666", fontSize: 13, cursor: "pointer", padding: "4px" }}>
+                {lang === "ka" ? "← უკან" : lang === "ru" ? "← Назад" : "← Back to Sign In"}
+              </button>
+            </div>
+          )
+        ) : (
+          <>
+            {err && <div style={{ background: "#FEF2F2", border: "1.5px solid #FEE2E2", borderRadius: 9, padding: "9px 13px", marginBottom: 14, fontSize: 13, color: "#dc2626" }}>{err}</div>}
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {mode === "signup" && (
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "სახელი" : lang === "ru" ? "Имя" : "First Name"} *</label>
+                      <input required value={form.firstName} onChange={e => set("firstName", e.target.value)} style={inp2} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "გვარი" : lang === "ru" ? "Фамилия" : "Last Name"} *</label>
+                      <input required value={form.lastName} onChange={e => set("lastName", e.target.value)} style={inp2} />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "ტელეფონი" : lang === "ru" ? "Телефон" : "Phone"} *</label>
+                    <input required type="tel" value={form.phone} onChange={e => set("phone", e.target.value)} style={inp2} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "მისამართი" : lang === "ru" ? "Адрес" : "Address"}</label>
+                    <input value={form.address} onChange={e => set("address", e.target.value)} style={inp2} />
+                  </div>
+                </>
+              )}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>Email *</label>
+                <input required type="email" value={form.email} onChange={e => set("email", e.target.value)} style={inp2} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "პაროლი" : lang === "ru" ? "Пароль" : "Password"} *</label>
+                <input required type="password" value={form.password} onChange={e => set("password", e.target.value)} style={inp2} />
+                {mode === "login" && (
+                  <div style={{ textAlign: "right", marginTop: 4 }}>
+                    <button type="button" onClick={() => { setMode("forgot"); setForgotEmail(form.email); setErr(""); }} style={{ background: "none", border: "none", color: "#E65C00", fontSize: 12, cursor: "pointer", padding: 0 }}>
+                      {lang === "ka" ? "პაროლი დაგავიწყდა?" : lang === "ru" ? "Забыли пароль?" : "Forgot password?"}
+                    </button>
+                  </div>
+                )}
+              </div>
+              {mode === "signup" && (
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{lang === "ka" ? "გაიმეორეთ პაროლი" : lang === "ru" ? "Повторите пароль" : "Confirm Password"} *</label>
+                  <input required type="password" value={form.confirm} onChange={e => set("confirm", e.target.value)} style={inp2} />
+                </div>
+              )}
+              <button type="submit" style={{ background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 14, fontWeight: 700, cursor: "pointer", marginTop: 4 }}>
+                {mode === "login" ? (lang === "ka" ? "შესვლა" : lang === "ru" ? "Войти" : "Sign In") : (lang === "ka" ? "რეგისტრაცია" : lang === "ru" ? "შექმნა" : "Create Account")}
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </>
   );
@@ -931,6 +972,11 @@ export default function App() {
     ...categories
       .filter(c => !catOverrides[c.name]?.hidden)
       .map(c => ({ ...c, ...(catOverrides[c.name] || {}) })),
+    ...customCategories,
+  ];
+  // Used for sidebar + Shop by Category — hidden flag doesn't apply there
+  const allCategoriesNav = [
+    ...categories.map(c => ({ ...c, ...(catOverrides[c.name] || {}) })),
     ...customCategories,
   ];
   const t = translations[lang];
@@ -1390,7 +1436,7 @@ export default function App() {
             {/* Dark sidebar */}
             <div className="sidebar-col" style={{ background: "#1a1a1a", padding: "0.75rem 0.625rem", overflowY: "auto", overflowX: "hidden", height: 480, minWidth: 0, border: "2px solid #E65C00", borderRadius: 10, boxShadow: "0 0 18px rgba(230,92,0,0.35)" }}>
               <div style={{ fontSize: 12, color: "#fff", fontWeight: 800, letterSpacing: 2, marginBottom: "0.75rem", padding: "7px 10px", background: "#E65C00", borderRadius: 6, textAlign: "center", textTransform: "uppercase", boxShadow: "0 2px 8px rgba(230,92,0,0.5)", flexShrink: 0 }}>BROWSE PRODUCTS</div>
-              {allCategories.map(cat => {
+              {allCategoriesNav.map(cat => {
                 const catSubcats = subcategories.filter(s => s.parentName === cat.name);
                 const catLabel = lang === "en" ? cat.en : lang === "ru" ? (cat.ru || cat.en) : cat.name;
                 const isHovered = hoveredCat === cat.name;
@@ -1464,7 +1510,7 @@ export default function App() {
                 <div style={{ fontSize: 18, fontWeight: 800, color: "#1a1a1a", letterSpacing: 0.2 }}>{t.featured}</div>
               </div>
               <div className="cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(145px, 1fr))", gap: 12 }}>
-                {allCategories.map(cat => {
+                {allCategoriesNav.map(cat => {
                   const catLabel = lang === "en" ? cat.en : lang === "ru" ? (cat.ru || cat.en) : cat.name;
                   return (
                     <div key={cat.name} onClick={() => goSeeAll(cat.name)}

@@ -1723,6 +1723,9 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
   const [emailInput, setEmailInput] = useState("");
   const [passInput, setPassInput] = useState("");
   const [passErr, setPassErr] = useState("");
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [resetSent, setResetSent] = useState(false);
   const [tab, setTab] = useState("products");
 
   useEffect(() => {
@@ -1742,6 +1745,15 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
     if (error) { setPassErr("Incorrect email or password"); setPassInput(""); }
   };
 
+  const sendReset = async () => {
+    setPassErr("");
+    if (!forgotEmail) { setPassErr("Enter your email address"); return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: window.location.origin + "/admin",
+    });
+    if (error) { setPassErr(error.message); } else { setResetSent(true); }
+  };
+
   const handleLogout = () => supabase.auth.signOut();
 
   if (authLoading) return null;
@@ -1752,19 +1764,52 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
         <div style={{ background: "#fff", borderRadius: 16, padding: "2.5rem", width: "min(380px, 90vw)", border: "1.5px solid #f0f0f0", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
           <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
             <div style={{ fontSize: 42, marginBottom: 12 }}>🔐</div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Admin Panel</h2>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{forgotMode ? "Reset Password" : "Admin Panel"}</h2>
             <p style={{ color: "#888", fontSize: 12, margin: "6px 0 0" }}>mgp.ge/admin</p>
           </div>
-          <input type="email" value={emailInput} onChange={e => { setEmailInput(e.target.value); setPassErr(""); }}
-            onKeyDown={e => e.key === "Enter" && tryLogin()} placeholder="Email" autoFocus
-            style={{ ...inp, marginBottom: 10 }} />
-          <input type="password" value={passInput} onChange={e => { setPassInput(e.target.value); setPassErr(""); }}
-            onKeyDown={e => e.key === "Enter" && tryLogin()} placeholder="Password"
-            style={{ ...inp, marginBottom: passErr ? 8 : 14, border: `1.5px solid ${passErr ? "#dc2626" : "#ddd"}` }} />
-          {passErr && <p style={{ color: "#dc2626", fontSize: 12, margin: "0 0 12px" }}>{passErr}</p>}
-          <button onClick={tryLogin} style={{ width: "100%", background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-            Sign In
-          </button>
+          {forgotMode ? (
+            resetSent ? (
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>📧</div>
+                <p style={{ fontSize: 14, color: "#333", marginBottom: 20 }}>Reset link sent! Check your email and follow the link to set a new password.</p>
+                <button onClick={() => { setForgotMode(false); setResetSent(false); setForgotEmail(""); setPassErr(""); }} style={{ width: "100%", background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                  Back to Sign In
+                </button>
+              </div>
+            ) : (
+              <>
+                <p style={{ fontSize: 13, color: "#666", marginBottom: 14 }}>Enter your admin email and we'll send you a reset link.</p>
+                <input type="email" value={forgotEmail} onChange={e => { setForgotEmail(e.target.value); setPassErr(""); }}
+                  onKeyDown={e => e.key === "Enter" && sendReset()} placeholder="Admin email" autoFocus
+                  style={{ ...inp, marginBottom: passErr ? 8 : 14 }} />
+                {passErr && <p style={{ color: "#dc2626", fontSize: 12, margin: "0 0 12px" }}>{passErr}</p>}
+                <button onClick={sendReset} style={{ width: "100%", background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
+                  Send Reset Link
+                </button>
+                <button onClick={() => { setForgotMode(false); setPassErr(""); }} style={{ width: "100%", background: "transparent", color: "#666", border: "none", fontSize: 13, cursor: "pointer", padding: "6px" }}>
+                  ← Back to Sign In
+                </button>
+              </>
+            )
+          ) : (
+            <>
+              <input type="email" value={emailInput} onChange={e => { setEmailInput(e.target.value); setPassErr(""); }}
+                onKeyDown={e => e.key === "Enter" && tryLogin()} placeholder="Email" autoFocus
+                style={{ ...inp, marginBottom: 10 }} />
+              <input type="password" value={passInput} onChange={e => { setPassInput(e.target.value); setPassErr(""); }}
+                onKeyDown={e => e.key === "Enter" && tryLogin()} placeholder="Password"
+                style={{ ...inp, marginBottom: passErr ? 8 : 6, border: `1.5px solid ${passErr ? "#dc2626" : "#ddd"}` }} />
+              {passErr && <p style={{ color: "#dc2626", fontSize: 12, margin: "0 0 8px" }}>{passErr}</p>}
+              <div style={{ textAlign: "right", marginBottom: 14 }}>
+                <button onClick={() => { setForgotMode(true); setForgotEmail(emailInput); setPassErr(""); }} style={{ background: "none", border: "none", color: "#E65C00", fontSize: 12, cursor: "pointer", padding: 0 }}>
+                  Forgot password?
+                </button>
+              </div>
+              <button onClick={tryLogin} style={{ width: "100%", background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                Sign In
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
