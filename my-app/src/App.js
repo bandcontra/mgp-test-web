@@ -36,6 +36,7 @@ const translations = {
     loginRequired: "Please sign in to place an order.", addedToWishlist: "Added to wishlist", removedFromWishlist: "Removed from wishlist",
     stockLeft: "left", noOrders: "No orders yet.", noWishlist: "Your wishlist is empty.",
     orderDate: "Date", orderTotal: "Total", orderItems: "Items",
+    packOf: "Pack of", pcs: "pcs", perBox: "per box", boxes: "boxes", box: "box",
   },
   ka: {
     storeName: "მასტერ ჯგუფი", searchPlaceholder: "მოძებნეთ პროდუქტი...", allCategories: "ყველა კატეგორია",
@@ -61,6 +62,7 @@ const translations = {
     loginRequired: "შეკვეთის გასაფორმებლად გთხოვთ შეხვიდეთ.", addedToWishlist: "დამატებულია", removedFromWishlist: "წაშლილია",
     stockLeft: "დარჩა", noOrders: "შეკვეთები არ არის.", noWishlist: "სასურველი სია ცარიელია.",
     orderDate: "თარიღი", orderTotal: "ჯამი", orderItems: "პოზიციები",
+    packOf: "შეფუთვა", pcs: "ც.", perBox: "ყუთი", boxes: "ყუთი", box: "ყუთი",
   },
   ru: {
     storeName: "Мастер Групп", searchPlaceholder: "Поиск товаров...", allCategories: "Все категории",
@@ -86,6 +88,7 @@ const translations = {
     loginRequired: "Войдите, чтобы оформить заказ.", addedToWishlist: "Добавлено в избранное", removedFromWishlist: "Удалено из избранного",
     stockLeft: "осталось", noOrders: "Заказов пока нет.", noWishlist: "Избранное пусто.",
     orderDate: "Дата", orderTotal: "Сумма", orderItems: "Позиции",
+    packOf: "Упаковка", pcs: "шт.", perBox: "за уп.", boxes: "уп.", box: "уп.",
   },
 };
 
@@ -156,6 +159,9 @@ function ProductCard({ p, t, onAdd, onView, lang, cats, wishlist, onToggleWishli
           <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: isOutOfStock ? "#FEE2E2" : "#E1F5EE", color: isOutOfStock ? "#991B1B" : "#065F46", fontWeight: 700 }}>{isOutOfStock ? t.outOfStock : t.inStock}</span>
           {!isOutOfStock && p.stockQty != null && p.stockQty <= 10 && (
             <span style={{ fontSize: 10, color: "#E65C00", fontWeight: 700 }}>{p.stockQty} {t.stockLeft}</span>
+          )}
+          {p.packSize && (
+            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 20, background: "#EFF6FF", color: "#1E3A5F", fontWeight: 700 }}>{t.packOf} {p.packSize} {t.pcs}</span>
           )}
         </div>
         <button disabled={isOutOfStock} onClick={e => { e.stopPropagation(); !isOutOfStock && onAdd(p); }}
@@ -376,11 +382,14 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
 
           <div style={{ background: "#FFF8F5", borderRadius: 12, padding: "1rem 1.25rem", marginBottom: "1.25rem" }}>
             {p.price > 0 ? (
-              <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 36, fontWeight: 800, color: "#E65C00", lineHeight: 1 }}>₾{p.price.toFixed(2)}</span>
-                {p.oldPrice && <span style={{ fontSize: 20, color: "#bbb", textDecoration: "line-through" }}>₾{p.oldPrice.toFixed(2)}</span>}
-                {p.disc && <span style={{ background: "#FEE2E2", color: "#991B1B", fontSize: 12, fontWeight: 700, padding: "3px 9px", borderRadius: 6 }}>-{p.disc}% {t.off}</span>}
-              </div>
+              <>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 36, fontWeight: 800, color: "#E65C00", lineHeight: 1 }}>₾{p.price.toFixed(2)}</span>
+                  {p.oldPrice && <span style={{ fontSize: 20, color: "#bbb", textDecoration: "line-through" }}>₾{p.oldPrice.toFixed(2)}</span>}
+                  {p.disc && <span style={{ background: "#FEE2E2", color: "#991B1B", fontSize: 12, fontWeight: 700, padding: "3px 9px", borderRadius: 6 }}>-{p.disc}% {t.off}</span>}
+                  {p.packSize && <span style={{ fontSize: 12, color: "#1E3A5F", fontWeight: 600 }}>{t.perBox} · {t.packOf} {p.packSize} {t.pcs}</span>}
+                </div>
+              </>
             ) : (
               <span style={{ fontSize: 16, color: "#aaa", fontWeight: 600 }}>კონტაქტი / Call for Price</span>
             )}
@@ -403,13 +412,17 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
 
           {p.stock && p.price > 0 && (
             <div style={{ marginBottom: "1.5rem" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 8 }}>{t.qty}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 8 }}>
+                {p.packSize ? t.boxes : t.qty}
+                {p.packSize && <span style={{ fontSize: 11, color: "#888", fontWeight: 400, marginLeft: 6 }}>(1 {t.box} = {p.packSize} {t.pcs})</span>}
+              </div>
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", border: "1.5px solid #ddd", borderRadius: 10, overflow: "hidden" }}>
                   <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: 40, height: 46, border: "none", background: "#f7f7f7", cursor: "pointer", fontSize: 20, color: "#555", fontWeight: 400 }}>−</button>
                   <span style={{ width: 48, textAlign: "center", fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>{qty}</span>
                   <button onClick={() => setQty(q => p.stockQty != null ? Math.min(p.stockQty, q + 1) : q + 1)} style={{ width: 40, height: 46, border: "none", background: "#f7f7f7", cursor: "pointer", fontSize: 20, color: "#555", fontWeight: 400 }}>+</button>
                 </div>
+                {p.packSize && <span style={{ fontSize: 12, color: "#888" }}>{qty * p.packSize} {t.pcs}</span>}
                 <button onClick={() => onAdd(p, qty)} style={{ flex: 1, background: "#E65C00", color: "#fff", border: "none", borderRadius: 10, height: 46, fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
                   {t.addToCart}
                 </button>
@@ -1235,9 +1248,10 @@ export default function App() {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, fontWeight: 500, color: "#1a1a1a", lineHeight: 1.3 }}>{lang === "en" ? (item.en || item.name) : item.name}</div>
                       <div style={{ fontSize: 12, color: "#E65C00", fontWeight: 700, marginTop: 3 }}>{item.price > 0 ? `₾${(item.qty * item.price).toFixed(2)}` : "—"}</div>
+                      {item.packSize && <div style={{ fontSize: 10, color: "#888", marginTop: 1 }}>{item.qty * item.packSize} {t.pcs}</div>}
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
                         <button onClick={() => updateQty(item.id, -1)} style={{ width: 24, height: 24, border: "1px solid #ddd", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: 14 }}>−</button>
-                        <span style={{ fontSize: 13, fontWeight: 600 }}>{item.qty}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600 }}>{item.qty} {item.packSize ? t.box : ""}</span>
                         <button onClick={() => updateQty(item.id, 1)} style={{ width: 24, height: 24, border: "1px solid #ddd", borderRadius: 6, background: "#fff", cursor: "pointer", fontSize: 14 }}>+</button>
                       </div>
                     </div>

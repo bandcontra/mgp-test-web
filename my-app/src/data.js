@@ -26,6 +26,7 @@ function rowToProduct(row) {
     images: (row.images || []).map(fixStorageUrl), img: fixStorageUrl(row.img) || null,
     cat: row.cat || null, tag: row.tag || null,
     disc: row.disc || null, subcat: row.subcat || null,
+    packSize: row.pack_size ? parseInt(row.pack_size) : null,
   };
 }
 
@@ -40,6 +41,7 @@ function productToRow(p) {
     images: p.images || [],
     img: p.img || null, cat: p.cat || null, tag: p.tag || null,
     disc: p.disc || null, subcat: p.subcat || null,
+    pack_size: p.packSize || null,
   };
 }
 

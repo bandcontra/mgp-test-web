@@ -180,7 +180,7 @@ function ImageUploader({ images, onChange }) {
 }
 
 // ─── ProductModal ─────────────────────────────────────────────────────────────
-const emptyProduct = { name: "", en: "", desc: "", details: "", specs: [], sku: "", barcode: "", price: "", stock: true, stockQty: null, images: [], cat: defaultCategories[0].name, tag: null, disc: null };
+const emptyProduct = { name: "", en: "", desc: "", details: "", specs: [], sku: "", barcode: "", price: "", stock: true, stockQty: null, packSize: null, images: [], cat: defaultCategories[0].name, tag: null, disc: null };
 const inp = { width: "100%", padding: "8px 10px", border: "1.5px solid #ddd", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit" };
 
 function Field({ label, children }) {
@@ -278,6 +278,11 @@ function ProductModal({ prod, onSave, onClose, nextId, allCategories, subcategor
               onChange={e => set("stockQty", e.target.value === "" ? null : parseInt(e.target.value) || 0)} />
           </Field>
         </div>
+        <Field label="Pack Size — pcs per box (blank = sold individually)">
+          <input style={{ ...inp, width: "50%" }} type="number" min="1" placeholder="e.g. 300"
+            value={form.packSize ?? ""}
+            onChange={e => set("packSize", e.target.value === "" ? null : parseInt(e.target.value) || null)} />
+        </Field>
         <Field label="Product Images (drag & drop or click to upload — add as many as you want)">
           {prod && prod.img && !prod.img.startsWith("data:") && (form.images || []).length === 0 && (
             <div style={{ fontSize: 11, color: "#888", marginBottom: 8, padding: "6px 10px", background: "#f8f8f8", borderRadius: 6 }}>
@@ -381,6 +386,7 @@ function CSVImportModal({ onClose, onImport, nextId, allCategories }) {
       cat: catNames.includes(r.cat) ? r.cat : (allCategories?.[0]?.name || ""),
       tag: ["new","hot","discount"].includes(r.tag) ? r.tag : null,
       disc: parseInt(r.disc || r["discount"]) || null,
+      packSize: parseInt(r.packsize || r["pack_size"]) || null,
       images: [],
       img: r.img || r.image || null,
     }));
@@ -494,13 +500,13 @@ function ProductsTab({ products, setProducts, allCategories, subcategories }) {
   };
 
   const exportCSV = () => {
-    const header = "id,name,en,desc,price,oldPrice,cat,tag,disc,stock,stockQty,sku,barcode";
+    const header = "id,name,en,desc,price,oldPrice,cat,tag,disc,stock,stockQty,sku,barcode,packSize";
     const escape = (v) => {
       const s = v == null ? "" : String(v);
       return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const rows = products.map(p =>
-      [p.id, p.name, p.en, p.desc, p.price, p.oldPrice ?? "", p.cat, p.tag ?? "", p.disc ?? "", p.stock, p.stockQty ?? "", p.sku ?? "", p.barcode ?? ""].map(escape).join(",")
+      [p.id, p.name, p.en, p.desc, p.price, p.oldPrice ?? "", p.cat, p.tag ?? "", p.disc ?? "", p.stock, p.stockQty ?? "", p.sku ?? "", p.barcode ?? "", p.packSize ?? ""].map(escape).join(",")
     );
     const csv = [header, ...rows].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
