@@ -493,7 +493,7 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
   );
 }
 
-function ProfilePage({ currentUser, t, lang, onLogout, onView, products, wishlist, onToggleWishlist, onGoHome }) {
+function ProfilePage({ currentUser, t, lang, onLogout, onView, onAdd, products, wishlist, onToggleWishlist, onGoHome }) {
   const [tab, setTab] = useState("info");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ firstName: currentUser.firstName, lastName: currentUser.lastName, phone: currentUser.phone, address: currentUser.address || "" });
@@ -582,7 +582,7 @@ function ProfilePage({ currentUser, t, lang, onLogout, onView, products, wishlis
             ? <div style={{ textAlign: "center", padding: "3rem 0", color: "#aaa", fontSize: 15 }}>{t.noWishlist}</div>
             : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: 16 }}>
                 {wishlistProducts.map(p => (
-                  <ProductCard key={p.id} p={p} t={t} onAdd={() => {}} onView={onView} lang={lang} wishlist={wishlist} onToggleWishlist={onToggleWishlist} />
+                  <ProductCard key={p.id} p={p} t={t} onAdd={onAdd} onView={onView} lang={lang} wishlist={wishlist} onToggleWishlist={onToggleWishlist} />
                 ))}
               </div>
           }
@@ -1801,6 +1801,7 @@ export default function App() {
           lang={lang}
           onLogout={() => { logoutCustomer(); setCurrentUser(null); setWishlist([]); setPage("home"); }}
           onView={goToProduct}
+          onAdd={addToCart}
           products={products}
           wishlist={wishlist}
           onToggleWishlist={toggleWishlist}
