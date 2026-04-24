@@ -8,6 +8,12 @@ export const HOEGERT_NAME = "HOEGERT";
 export const OLD_HOGERT_CATS = ["HOGERT სახარჯი მასალები", "HOGERT GERMAN ხელსაწყოები"];
 
 // ── Supabase row ↔ JS product mappers ─────────────────────────────────────────
+function fixStorageUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  // Insert missing /public/ segment in Supabase storage URLs
+  return url.replace(/(\/storage\/v1\/object\/)(product-images\/)/, '$1public/$2');
+}
+
 function rowToProduct(row) {
   return {
     id: row.id, name: row.name, en: row.en || null,
@@ -17,7 +23,7 @@ function rowToProduct(row) {
     oldPrice: row.old_price ? parseFloat(row.old_price) : null,
     stock: row.stock !== false,
     stockQty: row.stock_qty != null ? row.stock_qty : null,
-    images: row.images || [], img: row.img || null,
+    images: (row.images || []).map(fixStorageUrl), img: fixStorageUrl(row.img) || null,
     cat: row.cat || null, tag: row.tag || null,
     disc: row.disc || null, subcat: row.subcat || null,
   };
