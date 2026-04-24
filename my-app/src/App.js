@@ -395,6 +395,15 @@ function ProductPage({ p, t, lang, onAdd, onBack, onView, allProducts, cats, onG
             )}
           </div>
 
+          {p.packSize && (
+            <div style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "#EFF6FF", borderRadius: 10, border: "1.5px solid #BFDBFE" }}>
+              <span style={{ fontSize: 18 }}>📦</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#1E3A5F" }}>{t.packOf} {p.packSize} {t.pcs}</div>
+                <div style={{ fontSize: 11, color: "#5B8BB0", marginTop: 1 }}>{lang === "en" ? "Sold in full boxes only" : lang === "ru" ? "Продаётся только целыми упаковками" : "იყიდება მხოლოდ სრული ყუთებით"}</div>
+              </div>
+            </div>
+          )}
           <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span style={{ fontSize: 13, padding: "6px 14px", borderRadius: 8, background: p.stock ? "#E1F5EE" : "#FEE2E2", color: p.stock ? "#065F46" : "#991B1B", fontWeight: 700 }}>
               {p.stock ? "✓ " + t.inStock : "✗ " + t.outOfStock}
