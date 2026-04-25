@@ -1023,6 +1023,7 @@ export default function App() {
   const [products, setProducts] = useState(getStoredProducts);
   const [sliderConfig, setSliderConfig] = useState(() => getSliderConfig());
   const [sliderDisabled, setSliderDisabled] = useState(() => getSliderDisabled());
+  const [settingsLoaded, setSettingsLoaded] = useState(() => getSliderConfig() !== null);
   const [headerBanners, setHeaderBanners] = useState(() => getHeaderBanners());
   const [customCategories, setCustomCategories] = useState(() => getCustomCategories());
   const [subcategories, setSubcategories] = useState(() => getSubcategories());
@@ -1085,7 +1086,7 @@ export default function App() {
   // Hydrate all admin settings from Supabase on mount
   useEffect(() => {
     fetchAllSettings().then(s => {
-      if (!s) return;
+      if (!s) { setSettingsLoaded(true); return; }
       const apply = (key, setter, transform) => {
         if (s[key] == null) return;
         const val = transform ? transform(s[key]) : s[key];
@@ -1116,7 +1117,8 @@ export default function App() {
       }
       if (s['mgp_views']) localStorage.setItem('mgp_views', JSON.stringify(s['mgp_views']));
       if (s['mgp_sales']) localStorage.setItem('mgp_sales', JSON.stringify(s['mgp_sales']));
-    });
+      setSettingsLoaded(true);
+    }).catch(() => setSettingsLoaded(true));
   }, []);
 
   // Real-time: apply site_settings changes instantly across all open tabs/devices
@@ -1359,6 +1361,7 @@ export default function App() {
         .prod-card { transition: transform 0.18s, box-shadow 0.18s; }
         div::-webkit-scrollbar { display: none; }
         @keyframes brandScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-25%); } }
+        @keyframes sliderSkeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .cat-card:hover .cat-card-img { transform: scale(1.07); }
         .cat-card:hover { transform: translateY(-4px) !important; box-shadow: 0 8px 0 var(--cat-accent, #ccc), 0 12px 28px rgba(0,0,0,0.22) !important; }
         .mobile-hamburger { display: none; }
@@ -1698,7 +1701,9 @@ export default function App() {
 
             {/* Slider in the right column, next to the sidebar */}
             <div style={{ minWidth: 0, overflow: "hidden", height: "100%", borderRadius: 10 }}>
-              {!sliderDisabled && <PromoSlider t={t} lang={lang} onShop={() => setPage("catalog")} onView={goToProduct} products={products} sliderConfig={sliderConfig} />}
+              {!settingsLoaded
+                ? <div style={{ minHeight: 380, borderRadius: 10, background: "linear-gradient(90deg,#1a1a1a 0%,#2a2a2a 50%,#1a1a1a 100%)", backgroundSize: "200% 100%", animation: "sliderSkeleton 1.4s ease-in-out infinite" }} />
+                : !sliderDisabled && <PromoSlider t={t} lang={lang} onShop={() => setPage("catalog")} onView={goToProduct} products={products} sliderConfig={sliderConfig} />}
             </div>
 
           </div>
