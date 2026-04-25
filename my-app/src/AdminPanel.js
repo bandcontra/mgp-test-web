@@ -11,7 +11,7 @@ import {
   getCategoryOverrides, saveCategoryOverrides,
   getProductViews, getProductSales,
   fetchCustomersFromDB, deleteCustomer, updateCustomer,
-  getStoredOrders, updateOrderStatus,
+  getStoredOrders, fetchOrdersFromDB, updateOrderStatus,
   getHomepageSliders, saveHomepageSliders,
   getSocialLinks, saveSocialLinks,
   deleteProductFromDB,
@@ -1617,6 +1617,10 @@ function OrdersTab() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expanded, setExpanded] = useState(null);
+
+  useEffect(() => {
+    fetchOrdersFromDB().then(data => { if (data) setOrders(data); });
+  }, []);
 
   const filtered = orders.filter(o => {
     const matchSearch = `${o.orderNumber} ${o.customerName} ${o.email} ${o.phone}`.toLowerCase().includes(search.toLowerCase());
