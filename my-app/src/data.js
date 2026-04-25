@@ -353,10 +353,6 @@ export async function registerCustomer({ firstName, lastName, email, phone, addr
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { firstName, lastName, phone, address } } });
     if (error) return { error: error.message };
     if (!data.user) return { error: "Registration failed" };
-    if (!data.session) {
-      // Email confirmation required — don't log the user in yet
-      return { needsConfirmation: true };
-    }
     const customer = authUserToCustomer(data.user);
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
     return { customer };

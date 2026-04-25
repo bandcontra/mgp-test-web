@@ -678,7 +678,6 @@ function AuthModal({ onClose, onAuth, lang }) {
       if (form.password !== form.confirm) { setErr("Passwords do not match"); return; }
       const res = await registerCustomer(form);
       if (res.error) { setErr(res.error); return; }
-      if (res.needsConfirmation) { setErr("Account created! Check your email and click the confirmation link before signing in."); setMode("login"); return; }
       onAuth(res.customer);
     }
   };
