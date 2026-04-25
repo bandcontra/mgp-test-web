@@ -3,8 +3,8 @@ import { Helmet } from "react-helmet-async";
 import AdminPanel from "./AdminPanel";
 import { defaultCategories as categories, defaultProducts, HOEGERT_NAME, SZ, SZ_LG, getStoredProducts, saveProducts, fetchProductsFromDB, saveProductsToDB, getSEOSettings, getHeaderBanners, getSliderConfig, getSliderDisabled, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed, getHomepageSliders, getSocialLinks } from "./data";
 import mgpLogo from "./mgp-favicon_3.png";
-import bogLogo from "./bog-logo.svg";
-import tbcLogo from "./tbc-logo.svg";
+import bogLogo from "./bog-logo.png";
+import tbcLogo from "./tbc-logo.png";
 
 const HOEGERT_CAT = HOEGERT_NAME;
 
