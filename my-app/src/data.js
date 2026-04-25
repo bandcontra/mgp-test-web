@@ -355,6 +355,7 @@ export async function registerCustomer({ firstName, lastName, email, phone, addr
     if (!data.user) return { error: "Registration failed" };
     await supabase.from('profiles').insert({ id: data.user.id, first_name: firstName, last_name: lastName, email, phone, address });
     const customer = authUserToCustomer(data.user);
+    await supabase.auth.signOut();
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
     return { customer };
   }
@@ -377,6 +378,7 @@ export async function loginCustomer(email, password) {
       return { error: error.message };
     }
     const customer = authUserToCustomer(data.user);
+    await supabase.auth.signOut();
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
     return { customer };
   }
