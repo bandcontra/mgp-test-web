@@ -823,24 +823,25 @@ function CheckoutModal({ t, lang, cart, cartTotal, onClose, onSuccess, onTrackSa
       payment_method: form.paymentMethod,
       order_date: new Date().toISOString(),
     };
+    const orderData = {
+      orderNumber: oNum,
+      customerId: currentUser?.id || null,
+      customerName: payload.customer_name,
+      phone: form.phone,
+      email: form.email,
+      address: form.address,
+      items: cart.map(i => ({ id: i.id, name: i.name, en: i.en, qty: i.qty, price: i.packSize ? i.price * i.packSize : i.price })),
+      total: parseFloat(cartTotal.toFixed(2)),
+      paymentMethod: form.paymentMethod,
+      date: new Date().toISOString(),
+    };
+    onTrackSales && onTrackSales(cart);
+    saveOrder(orderData);
+    setOrderNumber(oNum);
+    setSuccess(true);
+    onSuccess();
     try {
       await fetch(WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-      onTrackSales && onTrackSales(cart);
-      saveOrder({
-        orderNumber: oNum,
-        customerId: currentUser?.id || null,
-        customerName: payload.customer_name,
-        phone: form.phone,
-        email: form.email,
-        address: form.address,
-        items: cart.map(i => ({ id: i.id, name: i.name, en: i.en, qty: i.qty, price: i.packSize ? i.price * i.packSize : i.price })),
-        total: parseFloat(cartTotal.toFixed(2)),
-        paymentMethod: form.paymentMethod,
-        date: new Date().toISOString(),
-      });
-      setOrderNumber(oNum);
-      setSuccess(true);
-      onSuccess();
     } catch {
       setWebhookError(true);
     } finally {

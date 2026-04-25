@@ -356,7 +356,6 @@ export async function registerCustomer({ firstName, lastName, email, phone, addr
     const { error: insertError } = await supabase.from('profiles').insert({ id: data.user.id, first_name: firstName, last_name: lastName, email, phone, address });
     if (insertError) return { error: `Profile save failed: ${insertError.message}` };
     const customer = authUserToCustomer(data.user);
-    await supabase.auth.signOut();
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
     return { customer };
   }
@@ -379,7 +378,6 @@ export async function loginCustomer(email, password) {
       return { error: error.message };
     }
     const customer = authUserToCustomer(data.user);
-    await supabase.auth.signOut();
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
     return { customer };
   }
@@ -439,7 +437,7 @@ export function saveOrder(order) {
   } catch {}
   if (supabase) supabase.from('orders').insert({
     order_number: order.orderNumber,
-    customer_id: order.customerId || null,
+    customer_id: (order.customerId && /^\d+$/.test(String(order.customerId))) ? Number(order.customerId) : null,
     customer_name: order.customerName || null,
     phone: order.phone || null,
     email: order.email || null,
@@ -448,8 +446,12 @@ export function saveOrder(order) {
     total: order.total || 0,
     payment_method: order.paymentMethod || 'cash',
     status: order.status || 'pending',
+    status_history: [],
     date: order.date || new Date().toISOString(),
-  }).then(({ error }) => { if (error) console.error('Order DB error:', error); });
+  }).then(({ error }) => {
+    if (error) console.error('[Supabase] Order insert failed:', JSON.stringify(error));
+    else console.log('[Supabase] Order saved successfully');
+  });
 }
 
 export function updateOrderStatus(orderNumber, status) {
