@@ -3,6 +3,8 @@ import { Helmet } from "react-helmet-async";
 import AdminPanel from "./AdminPanel";
 import { defaultCategories as categories, defaultProducts, HOEGERT_NAME, SZ, SZ_LG, getStoredProducts, saveProducts, fetchProductsFromDB, saveProductsToDB, getSEOSettings, getHeaderBanners, getSliderConfig, getSliderDisabled, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed, getHomepageSliders, getSocialLinks } from "./data";
 import mgpLogo from "./mgp-favicon_3.png";
+import bogLogo from "./bog-logo.svg";
+import tbcLogo from "./tbc-logo.svg";
 
 const HOEGERT_CAT = HOEGERT_NAME;
 
@@ -864,6 +866,31 @@ function CheckoutModal({ t, lang, cart, cartTotal, onClose, onSuccess, onTrackSa
               </div>
             )}
             <p style={{ color: "#666", fontSize: 14, lineHeight: 1.6 }}>{t.orderSuccessMsg}</p>
+            {form.paymentMethod === "transfer" && (
+              <div style={{ marginTop: 20, textAlign: "left" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 10, textAlign: "center" }}>
+                  {lang === "ka" ? "საბანკო გადარიცხვის დეტალები" : lang === "ru" ? "Реквизиты для перевода" : "Bank Transfer Details"}
+                </div>
+                {[
+                  { logo: bogLogo, name: "Bank of Georgia", iban: "GE23BG0000000969896800" },
+                  { logo: tbcLogo, name: "TBC Bank", iban: "GE13TB7183136120100004" },
+                ].map(bank => (
+                  <div key={bank.name} style={{ background: "#f8f8f8", border: "1.5px solid #e8e8e8", borderRadius: 12, padding: "14px 16px", marginBottom: 10, display: "flex", alignItems: "center", gap: 14 }}>
+                    <img src={bank.logo} alt={bank.name} style={{ width: 64, height: 22, objectFit: "contain", flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 11, color: "#888", marginBottom: 2 }}>{lang === "ka" ? "IBAN" : "IBAN"}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", letterSpacing: 0.5, wordBreak: "break-all" }}>{bank.iban}</div>
+                    </div>
+                    <button onClick={() => navigator.clipboard.writeText(bank.iban)} style={{ background: "#E65C00", color: "#fff", border: "none", borderRadius: 7, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+                      {lang === "ka" ? "კოპირება" : lang === "ru" ? "Копировать" : "Copy"}
+                    </button>
+                  </div>
+                ))}
+                <div style={{ fontSize: 11, color: "#888", textAlign: "center", marginTop: 4 }}>
+                  {lang === "ka" ? "გთხოვთ მიუთითოთ შეკვეთის ნომერი გადარიცხვის დანიშნულებაში" : lang === "ru" ? "Укажите номер заказа в назначении платежа" : "Please include your order number in the transfer reference"}
+                </div>
+              </div>
+            )}
             <button onClick={onClose} style={{ marginTop: 20, background: "#E65C00", color: "#fff", border: "none", borderRadius: 9, padding: "11px 32px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>OK</button>
           </div>
         ) : (
