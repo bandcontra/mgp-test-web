@@ -66,9 +66,7 @@ async function uploadImageToStorage(src, productId, index) {
 
 async function saveSetting(key, value) {
   if (!supabase) return;
-  const { error } = await supabase.from('site_settings').upsert({ key, value });
-  if (error) console.error('[Supabase] site_settings write failed:', key, JSON.stringify(error));
-  else console.log('[Supabase] site_settings saved:', key);
+  try { await supabase.from('site_settings').upsert({ key, value }); } catch {}
 }
 
 export async function fetchAllSettings() {
