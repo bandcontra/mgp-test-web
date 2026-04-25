@@ -527,7 +527,7 @@ function ProfilePage({ currentUser, t, lang, onLogout, onView, onAdd, products, 
       {/* Header card */}
       <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "2rem", display: "flex", alignItems: "center", gap: 20, marginBottom: "1.5rem", flexWrap: "wrap" }}>
         <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#E65C00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
-          {currentUser.firstName[0].toUpperCase()}
+          {(currentUser.firstName?.[0] || currentUser.email?.[0] || '?').toUpperCase()}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{currentUser.firstName} {currentUser.lastName}</div>
@@ -1410,7 +1410,7 @@ export default function App() {
           <div style={{ marginTop: "auto", paddingTop: "1.5rem" }}>
             {currentUser ? (
               <div onClick={() => { setPage("profile"); setMobileMenuOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px", background: "rgba(255,255,255,0.08)", borderRadius: 10, cursor: "pointer" }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#E65C00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>{currentUser.firstName[0].toUpperCase()}</div>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#E65C00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>{(currentUser.firstName?.[0] || currentUser.email?.[0] || '?').toUpperCase()}</div>
                 <span style={{ color: "#fff", fontWeight: 600 }}>{currentUser.firstName}</span>
               </div>
             ) : (
@@ -1496,7 +1496,7 @@ export default function App() {
           {currentUser ? (
             <div onClick={() => setPage("profile")} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.12)", borderRadius: 9, padding: "5px 11px", marginLeft: 4, cursor: "pointer" }}>
               <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#E65C00", flexShrink: 0 }}>
-                {currentUser.firstName[0].toUpperCase()}
+                {(currentUser.firstName?.[0] || currentUser.email?.[0] || '?').toUpperCase()}
               </div>
               <span className="nav-cart-text" style={{ fontSize: 12, color: "#fff", fontWeight: 600, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser.firstName}</span>
             </div>
