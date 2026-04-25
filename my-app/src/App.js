@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import AdminPanel from "./AdminPanel";
+import supabase from "./supabase";
 import { defaultCategories as categories, defaultProducts, HOEGERT_NAME, SZ, SZ_LG, getStoredProducts, saveProducts, fetchProductsFromDB, saveProductsToDB, fetchAllSettings, getSEOSettings, getHeaderBanners, getSliderConfig, getSliderDisabled, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed, getHomepageSliders, getSocialLinks } from "./data";
 import mgpLogo from "./mgp-favicon_3.png";
 import bogLogo from "./bog-logo.png";
@@ -1116,6 +1117,30 @@ export default function App() {
       if (s['mgp_views']) localStorage.setItem('mgp_views', JSON.stringify(s['mgp_views']));
       if (s['mgp_sales']) localStorage.setItem('mgp_sales', JSON.stringify(s['mgp_sales']));
     });
+  }, []);
+
+  // Real-time: apply site_settings changes instantly across all open tabs/devices
+  useEffect(() => {
+    if (!supabase) return;
+    const setterMap = {
+      mgp_hbanners: setHeaderBanners,
+      mgp_custom_cats: setCustomCategories,
+      mgp_subcats: setSubcategories,
+      mgp_brand_logos: setBrandLogos,
+      mgp_cat_overrides: setCatOverrides,
+      mgp_homepage_sliders: setHomepageSliders,
+      mgp_socials: setSocialLinks,
+      mgp_slider: setSliderConfig,
+      mgp_slider_disabled: setSliderDisabled,
+    };
+    const channel = supabase
+      .channel('site_settings_rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, ({ new: row }) => {
+        const setter = setterMap[row.key];
+        if (setter) setter(row.value);
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
   }, []);
 
   // Apply SEO meta tags on mount

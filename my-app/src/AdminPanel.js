@@ -1629,6 +1629,24 @@ function OrdersTab() {
     fetchOrdersFromDB().then(data => { if (data) setOrders(data); });
   }, []);
 
+  useEffect(() => {
+    if (!supabase) return;
+    const channel = supabase
+      .channel('orders_rt')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, ({ new: row }) => {
+        setOrders(prev => [{
+          orderNumber: row.order_number, customerId: row.customer_id,
+          customerName: row.customer_name, phone: row.phone, email: row.email,
+          address: row.address, items: row.items || [],
+          total: parseFloat(row.total) || 0, paymentMethod: row.payment_method,
+          status: row.status || 'pending', statusHistory: row.status_history || [],
+          date: row.date,
+        }, ...prev]);
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, []);
+
   const filtered = orders.filter(o => {
     const matchSearch = `${o.orderNumber} ${o.customerName} ${o.email} ${o.phone}`.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "all" || (o.status || "pending") === statusFilter;
