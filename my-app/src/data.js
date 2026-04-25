@@ -353,6 +353,7 @@ export async function registerCustomer({ firstName, lastName, email, phone, addr
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { firstName, lastName, phone, address } } });
     if (error) return { error: error.message };
     if (!data.user) return { error: "Registration failed" };
+    await supabase.from('profiles').insert({ id: data.user.id, first_name: firstName, last_name: lastName, email, phone, address });
     const customer = authUserToCustomer(data.user);
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
     return { customer };
@@ -401,15 +402,25 @@ export function logoutCustomer() {
 export async function updateCustomer(updated) {
   localStorage.setItem('mgp_current_customer', JSON.stringify(updated));
   if (supabase) {
-    await supabase.auth.updateUser({ data: { firstName: updated.firstName, lastName: updated.lastName, phone: updated.phone || '', address: updated.address || '' } });
+    await supabase.from('profiles').update({ first_name: updated.firstName, last_name: updated.lastName, phone: updated.phone || '', address: updated.address || '' }).eq('id', updated.id);
   } else {
     saveCustomers(getStoredCustomers().map(c => c.id === updated.id ? { ...c, ...updated } : c));
   }
 }
 
-export async function fetchCustomersFromDB() { return getStoredCustomers(); }
+export async function fetchCustomersFromDB() {
+  if (supabase) {
+    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    return (data || []).map(r => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, email: r.email, phone: r.phone, address: r.address, createdAt: r.created_at }));
+  }
+  return getStoredCustomers();
+}
 
 export async function deleteCustomer(id) {
+  if (supabase) {
+    await supabase.from('profiles').delete().eq('id', id);
+    return;
+  }
   saveCustomers(getStoredCustomers().filter(c => c.id !== id));
 }
 
