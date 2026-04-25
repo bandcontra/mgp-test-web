@@ -333,6 +333,7 @@ export function trackProductView(id) {
     const views = JSON.parse(localStorage.getItem('mgp_views') || '{}');
     views[id] = (views[id] || 0) + 1;
     localStorage.setItem('mgp_views', JSON.stringify(views));
+    saveSetting('mgp_views', views).catch(() => {});
   } catch {}
 }
 export function getProductViews() {
@@ -347,6 +348,7 @@ export function trackProductSales(cartItems) {
       sales[item.id] = (sales[item.id] || 0) + item.qty;
     });
     localStorage.setItem('mgp_sales', JSON.stringify(sales));
+    saveSetting('mgp_sales', sales).catch(() => {});
   } catch {}
 }
 export function getProductSales() {

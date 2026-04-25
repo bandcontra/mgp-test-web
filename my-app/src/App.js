@@ -1113,6 +1113,8 @@ export default function App() {
         setMeta('description', seo.description);
         setMeta('keywords', seo.keywords);
       }
+      if (s['mgp_views']) localStorage.setItem('mgp_views', JSON.stringify(s['mgp_views']));
+      if (s['mgp_sales']) localStorage.setItem('mgp_sales', JSON.stringify(s['mgp_sales']));
     });
   }, []);
 

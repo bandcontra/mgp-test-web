@@ -9,7 +9,7 @@ import {
   getSubcategories, saveSubcategories,
   getBrandLogos, saveBrandLogos,
   getCategoryOverrides, saveCategoryOverrides,
-  getProductViews, getProductSales,
+  getProductViews, getProductSales, fetchAllSettings,
   fetchCustomersFromDB, deleteCustomer, updateCustomer,
   getStoredOrders, fetchOrdersFromDB, updateOrderStatus,
   getHomepageSliders, saveHomepageSliders,
@@ -1373,8 +1373,15 @@ function ActivityTab() {
 
 // ─── Analytics Tab ────────────────────────────────────────────────────────────
 function AnalyticsTab({ products }) {
-  const views = getProductViews();
-  const sales = getProductSales();
+  const [views, setViews] = useState(() => getProductViews());
+  const [sales, setSales] = useState(() => getProductSales());
+
+  useEffect(() => {
+    fetchAllSettings().then(s => {
+      if (s?.mgp_views) setViews(s.mgp_views);
+      if (s?.mgp_sales) setSales(s.mgp_sales);
+    });
+  }, []);
 
   const topViewed = Object.entries(views)
     .map(([id, count]) => ({ product: products.find(p => p.id === parseInt(id)), count }))
