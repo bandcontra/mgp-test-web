@@ -66,7 +66,7 @@ async function uploadImageToStorage(src, productId, index) {
 
 async function saveSetting(key, value) {
   if (!supabase) return;
-  try { await supabase.from('site_settings').upsert({ key, value }); } catch {}
+  try { await supabase.from('site_settings').upsert({ key, value, updated_at: new Date().toISOString() }); } catch {}
 }
 
 export async function fetchAllSettings() {
