@@ -353,6 +353,10 @@ export async function registerCustomer({ firstName, lastName, email, phone, addr
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { firstName, lastName, phone, address } } });
     if (error) return { error: error.message };
     if (!data.user) return { error: "Registration failed" };
+    if (!data.session) {
+      // Email confirmation required — don't log the user in yet
+      return { needsConfirmation: true };
+    }
     const customer = authUserToCustomer(data.user);
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
     return { customer };
@@ -368,7 +372,13 @@ export async function registerCustomer({ firstName, lastName, email, phone, addr
 export async function loginCustomer(email, password) {
   if (supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: "Invalid email or password" };
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+        return { error: "Please confirm your email before signing in. Check your inbox for a confirmation link." };
+      }
+      return { error: error.message };
+    }
     const customer = authUserToCustomer(data.user);
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
     return { customer };
