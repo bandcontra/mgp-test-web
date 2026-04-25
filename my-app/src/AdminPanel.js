@@ -1762,8 +1762,13 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
 
   const tryLogin = async () => {
     setPassErr("");
-    const { error } = await supabase.auth.signInWithPassword({ email: emailInput, password: passInput });
-    if (error) { setPassErr("Incorrect email or password"); setPassInput(""); }
+    const { data, error } = await supabase.auth.signInWithPassword({ email: emailInput, password: passInput });
+    if (error) { setPassErr("Incorrect email or password"); setPassInput(""); return; }
+    if (data.user.email !== ADMIN_EMAIL) {
+      await supabase.auth.signOut();
+      setPassErr("Incorrect email or password");
+      setPassInput("");
+    }
   };
 
   const sendReset = async () => {
