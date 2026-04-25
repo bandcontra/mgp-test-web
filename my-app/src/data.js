@@ -353,7 +353,8 @@ export async function registerCustomer({ firstName, lastName, email, phone, addr
     const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { firstName, lastName, phone, address } } });
     if (error) return { error: error.message };
     if (!data.user) return { error: "Registration failed" };
-    await supabase.from('profiles').insert({ id: data.user.id, first_name: firstName, last_name: lastName, email, phone, address });
+    const { error: insertError } = await supabase.from('profiles').insert({ id: data.user.id, first_name: firstName, last_name: lastName, email, phone, address });
+    if (insertError) return { error: `Profile save failed: ${insertError.message}` };
     const customer = authUserToCustomer(data.user);
     await supabase.auth.signOut();
     localStorage.setItem('mgp_current_customer', JSON.stringify(customer));
