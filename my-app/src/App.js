@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import AdminPanel from "./AdminPanel";
-import { defaultCategories as categories, defaultProducts, HOEGERT_NAME, SZ, SZ_LG, getStoredProducts, saveProducts, fetchProductsFromDB, saveProductsToDB, getSEOSettings, getHeaderBanners, getSliderConfig, getSliderDisabled, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed, getHomepageSliders, getSocialLinks } from "./data";
+import { defaultCategories as categories, defaultProducts, HOEGERT_NAME, SZ, SZ_LG, getStoredProducts, saveProducts, fetchProductsFromDB, saveProductsToDB, fetchAllSettings, getSEOSettings, getHeaderBanners, getSliderConfig, getSliderDisabled, getCustomCategories, getSubcategories, getBrandLogos, getCategoryOverrides, trackProductView, trackProductSales, registerCustomer, loginCustomer, getCurrentCustomer, logoutCustomer, updateCustomer, saveOrder, getStoredOrders, getWishlist, saveWishlist, decrementProductStock, getRecentlyViewed, addToRecentlyViewed, getHomepageSliders, getSocialLinks } from "./data";
 import mgpLogo from "./mgp-favicon_3.png";
 import bogLogo from "./bog-logo.png";
 import tbcLogo from "./tbc-logo.png";
@@ -1081,6 +1081,41 @@ export default function App() {
     });
   }, []);
 
+  // Hydrate all admin settings from Supabase on mount
+  useEffect(() => {
+    fetchAllSettings().then(s => {
+      if (!s) return;
+      const apply = (key, setter, transform) => {
+        if (s[key] == null) return;
+        const val = transform ? transform(s[key]) : s[key];
+        localStorage.setItem(key, JSON.stringify(val));
+        setter(val);
+      };
+      apply('mgp_hbanners', setHeaderBanners);
+      apply('mgp_custom_cats', setCustomCategories);
+      apply('mgp_subcats', setSubcategories);
+      apply('mgp_brand_logos', setBrandLogos);
+      apply('mgp_cat_overrides', setCatOverrides);
+      apply('mgp_homepage_sliders', setHomepageSliders);
+      apply('mgp_socials', setSocialLinks);
+      apply('mgp_slider', setSliderConfig);
+      apply('mgp_slider_disabled', setSliderDisabled);
+      if (s['mgp_seo']) {
+        const seo = s['mgp_seo'];
+        localStorage.setItem('mgp_seo', JSON.stringify(seo));
+        if (seo.title) document.title = seo.title;
+        const setMeta = (name, content) => {
+          if (!content) return;
+          let el = document.querySelector(`meta[name="${name}"]`);
+          if (!el) { el = document.createElement('meta'); el.name = name; document.head.appendChild(el); }
+          el.content = content;
+        };
+        setMeta('description', seo.description);
+        setMeta('keywords', seo.keywords);
+      }
+    });
+  }, []);
+
   // Apply SEO meta tags on mount
   useEffect(() => {
     const seo = getSEOSettings();
@@ -1135,6 +1170,18 @@ export default function App() {
     setCatOverrides(getCategoryOverrides());
     setHomepageSliders(getHomepageSliders());
     setSocialLinks(getSocialLinks());
+    fetchAllSettings().then(s => {
+      if (!s) return;
+      if (s['mgp_hbanners']) setHeaderBanners(s['mgp_hbanners']);
+      if (s['mgp_custom_cats']) setCustomCategories(s['mgp_custom_cats']);
+      if (s['mgp_subcats']) setSubcategories(s['mgp_subcats']);
+      if (s['mgp_brand_logos']) setBrandLogos(s['mgp_brand_logos']);
+      if (s['mgp_cat_overrides']) setCatOverrides(s['mgp_cat_overrides']);
+      if (s['mgp_homepage_sliders']) setHomepageSliders(s['mgp_homepage_sliders']);
+      if (s['mgp_socials']) setSocialLinks(s['mgp_socials']);
+      if (s['mgp_slider'] != null) setSliderConfig(s['mgp_slider']);
+      if (s['mgp_slider_disabled'] != null) setSliderDisabled(s['mgp_slider_disabled']);
+    });
   };
 
   const addToCart = (product, qty = 1) => {

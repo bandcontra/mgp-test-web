@@ -64,6 +64,20 @@ async function uploadImageToStorage(src, productId, index) {
   } catch { return src; }
 }
 
+async function saveSetting(key, value) {
+  if (!supabase) return;
+  try { await supabase.from('site_settings').upsert({ key, value }); } catch {}
+}
+
+export async function fetchAllSettings() {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase.from('site_settings').select('*');
+    if (error || !data) return null;
+    return Object.fromEntries(data.map(r => [r.key, r.value]));
+  } catch { return null; }
+}
+
 export async function fetchProductsFromDB() {
   if (!supabase) return null;
   try {
@@ -247,12 +261,12 @@ export function getActivity() {
 export function getSEOSettings() {
   try { return JSON.parse(localStorage.getItem('mgp_seo') || '{}'); } catch { return {}; }
 }
-export function saveSEOSettings(s) { localStorage.setItem('mgp_seo', JSON.stringify(s)); }
+export function saveSEOSettings(s) { localStorage.setItem('mgp_seo', JSON.stringify(s)); saveSetting('mgp_seo', s).catch(() => {}); }
 
 export function getSocialLinks() {
   try { return JSON.parse(localStorage.getItem('mgp_socials') || '{}'); } catch { return {}; }
 }
-export function saveSocialLinks(s) { localStorage.setItem('mgp_socials', JSON.stringify(s)); }
+export function saveSocialLinks(s) { localStorage.setItem('mgp_socials', JSON.stringify(s)); saveSetting('mgp_socials', s).catch(() => {}); }
 
 export function getHomepageSliders() {
   try {
@@ -261,12 +275,12 @@ export function getHomepageSliders() {
   } catch {}
   return defaultCategories.slice(0, 6).map(c => c.name);
 }
-export function saveHomepageSliders(list) { localStorage.setItem('mgp_homepage_sliders', JSON.stringify(list)); }
+export function saveHomepageSliders(list) { localStorage.setItem('mgp_homepage_sliders', JSON.stringify(list)); saveSetting('mgp_homepage_sliders', list).catch(() => {}); }
 
 export function getHeaderBanners() {
   try { return JSON.parse(localStorage.getItem('mgp_hbanners') || '[]'); } catch { return []; }
 }
-export function saveHeaderBanners(b) { localStorage.setItem('mgp_hbanners', JSON.stringify(b)); }
+export function saveHeaderBanners(b) { localStorage.setItem('mgp_hbanners', JSON.stringify(b)); saveSetting('mgp_hbanners', b).catch(() => {}); }
 
 export function getSliderConfig() {
   try { const s = localStorage.getItem('mgp_slider'); return s ? JSON.parse(s) : null; } catch { return null; }
@@ -274,6 +288,7 @@ export function getSliderConfig() {
 export function saveSliderConfig(c) {
   if (!c || !c.length) localStorage.removeItem('mgp_slider');
   else localStorage.setItem('mgp_slider', JSON.stringify(c));
+  saveSetting('mgp_slider', c && c.length ? c : null).catch(() => {});
 }
 export function getSliderDisabled() {
   return localStorage.getItem('mgp_slider_disabled') === '1';
@@ -281,17 +296,18 @@ export function getSliderDisabled() {
 export function setSliderDisabled(val) {
   if (val) localStorage.setItem('mgp_slider_disabled', '1');
   else localStorage.removeItem('mgp_slider_disabled');
+  saveSetting('mgp_slider_disabled', val ? true : false).catch(() => {});
 }
 
 export function getCustomCategories() {
   try { return JSON.parse(localStorage.getItem('mgp_custom_cats') || '[]'); } catch { return []; }
 }
-export function saveCustomCategories(cats) { localStorage.setItem('mgp_custom_cats', JSON.stringify(cats)); }
+export function saveCustomCategories(cats) { localStorage.setItem('mgp_custom_cats', JSON.stringify(cats)); saveSetting('mgp_custom_cats', cats).catch(() => {}); }
 
 export function getSubcategories() {
   try { return JSON.parse(localStorage.getItem('mgp_subcats') || '[]'); } catch { return []; }
 }
-export function saveSubcategories(s) { localStorage.setItem('mgp_subcats', JSON.stringify(s)); }
+export function saveSubcategories(s) { localStorage.setItem('mgp_subcats', JSON.stringify(s)); saveSetting('mgp_subcats', s).catch(() => {}); }
 
 const DEFAULT_BRAND_LOGOS = [
   { id: 1, src: '/crown.png', name: 'Crown' },
@@ -304,12 +320,12 @@ export function getBrandLogos() {
     return stored || DEFAULT_BRAND_LOGOS;
   } catch { return DEFAULT_BRAND_LOGOS; }
 }
-export function saveBrandLogos(logos) { localStorage.setItem('mgp_brand_logos', JSON.stringify(logos)); }
+export function saveBrandLogos(logos) { localStorage.setItem('mgp_brand_logos', JSON.stringify(logos)); saveSetting('mgp_brand_logos', logos).catch(() => {}); }
 
 export function getCategoryOverrides() {
   try { return JSON.parse(localStorage.getItem('mgp_cat_overrides') || '{}'); } catch { return {}; }
 }
-export function saveCategoryOverrides(o) { localStorage.setItem('mgp_cat_overrides', JSON.stringify(o)); }
+export function saveCategoryOverrides(o) { localStorage.setItem('mgp_cat_overrides', JSON.stringify(o)); saveSetting('mgp_cat_overrides', o).catch(() => {}); }
 
 // Analytics: product views
 export function trackProductView(id) {
