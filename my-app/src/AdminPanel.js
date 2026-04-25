@@ -1747,13 +1747,15 @@ export default function AdminPanel({ products, setProducts, onConfigChange }) {
   const [resetSent, setResetSent] = useState(false);
   const [tab, setTab] = useState(() => localStorage.getItem("adminTab") || "products");
 
+  const ADMIN_EMAIL = "datajijo@gmail.com";
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setAuthed(!!data.session);
+      setAuthed(!!data.session && data.session.user.email === ADMIN_EMAIL);
       setAuthLoading(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
-      setAuthed(!!session);
+      setAuthed(!!session && session.user.email === ADMIN_EMAIL);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
