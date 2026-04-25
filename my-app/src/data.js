@@ -47,7 +47,7 @@ function productToRow(p) {
 
 async function uploadImageToStorage(src, productId, index) {
   if (!src || !src.startsWith('data:')) return src;
-  if (!supabase) return src;
+  if (!supabase) return null;
   try {
     const mime = src.match(/data:(.*?);base64,/)[1];
     const ext = mime.split('/')[1].replace('jpeg', 'jpg') || 'jpg';
@@ -56,12 +56,13 @@ async function uploadImageToStorage(src, productId, index) {
     const byteArray = new Uint8Array(byteChars.length);
     for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
     const blob = new Blob([byteArray], { type: mime });
-    const path = `products/${productId}/${index}.${ext}`;
+    // Use timestamp in path so re-used product IDs never serve a stale old image
+    const path = `products/${productId}/${index}_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('product-images').upload(path, blob, { upsert: true, contentType: mime });
-    if (error) return src;
+    if (error) return null;
     const { data } = supabase.storage.from('product-images').getPublicUrl(path);
     return data.publicUrl;
-  } catch { return src; }
+  } catch { return null; }
 }
 
 async function saveSetting(key, value) {
@@ -93,7 +94,7 @@ export async function saveProductsToDB(prods) {
     const processed = await Promise.all(prods.map(async p => {
       if (!p.images || !p.images.some(s => s && s.startsWith('data:'))) return p;
       const uploaded = await Promise.all(p.images.map((src, i) => uploadImageToStorage(src, p.id, i)));
-      return { ...p, images: uploaded };
+      return { ...p, images: uploaded.filter(Boolean) };
     }));
     const rows = processed.map(productToRow);
     let { error } = await supabase.from('products').upsert(rows, { onConflict: 'id' });
